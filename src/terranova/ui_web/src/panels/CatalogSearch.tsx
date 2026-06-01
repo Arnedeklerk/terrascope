@@ -3,6 +3,7 @@ import { invoke } from "../bridge";
 import { formatDMS, parseDMS } from "./dms";
 import { JobProgress } from "./JobProgress";
 import { AoiMap, type Bbox, type FootprintSpec } from "./AoiMap";
+import { Select } from "./Select";
 
 // Cycling palette for ticked-footprint overlays.  Picked for distinguishability
 // against an OSM basemap and accessibility — eight high-saturation hues at
@@ -309,26 +310,26 @@ export function CatalogSearch() {
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="Endpoint">
-          <select
+          <Select
             value={endpoint}
-            onChange={(e) => setEndpoint(e.target.value)}
-            className="w-full bg-bg-1 border border-bg-2 rounded px-2 py-1"
-          >
-            <option value="planetary_computer">Planetary Computer</option>
-            <option value="earth_search">Earth Search</option>
-            <option value="cdse">Copernicus Data Space</option>
-          </select>
+            onChange={setEndpoint}
+            options={[
+              { value: "planetary_computer", label: "Planetary Computer" },
+              { value: "earth_search", label: "Earth Search" },
+              { value: "cdse", label: "Copernicus Data Space" },
+            ]}
+          />
         </Field>
         <Field label="Collection">
-          <select
+          <Select
             value={collection}
-            onChange={(e) => setCollection(e.target.value)}
-            className="w-full bg-bg-1 border border-bg-2 rounded px-2 py-1"
-          >
-            <option value="sentinel-2-l2a">Sentinel-2 L2A</option>
-            <option value="landsat-c2-l2">Landsat C2 L2</option>
-            <option value="sentinel-1-rtc">Sentinel-1 RTC</option>
-          </select>
+            onChange={setCollection}
+            options={[
+              { value: "sentinel-2-l2a", label: "Sentinel-2 L2A" },
+              { value: "landsat-c2-l2", label: "Landsat C2 L2" },
+              { value: "sentinel-1-rtc", label: "Sentinel-1 RTC" },
+            ]}
+          />
         </Field>
       </div>
 
