@@ -43,13 +43,30 @@ export function App() {
     if (!showBeta && BETA_TABS_SET.has(view)) setView("welcome");
   }, [showBeta, view, setView]);
 
+  // Body-scroll position survives across tab switches because the
+  // browser doesn't reset it on DOM tree changes.  That's jarring
+  // (you land mid-page on a different panel).  Snap to top whenever
+  // the active view changes.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [view]);
+
   const visibleTabs = showBeta
     ? [...STABLE_TABS, ...BETA_TABS]
     : [...STABLE_TABS];
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="px-6 py-4 border-b border-bg-2 flex items-baseline gap-3">
+    // No more inner scroll container.  The document body itself scrolls
+    // natively — that's the fastest scroll path the browser offers, and
+    // on HiDPI laptops where the previous overflow:auto inner scroller
+    // forced re-rasterisation per frame, this is the meaningful fix.
+    // Header is position: sticky so it stays pinned during the scroll.
+    <div className="flex flex-col">
+      <header
+        // sticky pinned at the top.  Background is opaque (bg-bg-0)
+        // so panel content scrolling underneath doesn't bleed through.
+        className="sticky top-0 z-20 bg-bg-0 px-6 py-4 border-b border-bg-2 flex items-baseline gap-3"
+      >
         <h1 className="text-lg font-semibold tracking-tight">Terranova</h1>
         <span className="text-fg-muted text-xs">Earth observation for QGIS</span>
 
@@ -92,24 +109,7 @@ export function App() {
         </div>
       </header>
 
-      <main
-        className="flex-1 p-6 overflow-auto"
-        // Force the scrolling container onto its own GPU compositor
-        // layer.  On HiDPI laptops without this hint, QtWebEngine
-        // re-rasterises the panel content for each scroll-position
-        // delta — at 200% display scaling that's 4× the work per
-        // frame.  With `transform: translateZ(0)` the compositor
-        // caches the content as a texture and scroll = blit.
-        //
-        // overscroll-behavior contains scroll chaining so a slow
-        // touchpad fling at the bottom doesn't queue up rubber-band
-        // events all the way back to QGIS's outer canvas.
-        style={{
-          transform: "translateZ(0)",
-          willChange: "scroll-position",
-          overscrollBehavior: "contain",
-        }}
-      >
+      <main className="p-6">
         {view === "welcome" && <Welcome />}
         {view === "catalog" && <CatalogSearch />}
         {view === "classify" && <Classify />}
