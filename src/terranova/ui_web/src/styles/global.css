@@ -7,21 +7,9 @@
 }
 
 html, body, #root {
-  /* Use min-height instead of height so the document can grow taller
-     than the viewport when the panel content is long — that's what
-     lets the BROWSER scroll the body natively instead of forcing us
-     into an inner overflow:auto container, which on HiDPI screens
-     forces a re-rasterise per scroll-tick. */
-  min-height: 100%;
+  height: 100%;
   margin: 0;
   padding: 0;
-}
-
-/* Instant scrolling — auto, not smooth — so each scroll tick is
-   immediate and doesn't queue an animator that gets behind on slow
-   compositor frames. */
-html {
-  scroll-behavior: auto;
 }
 
 body {
