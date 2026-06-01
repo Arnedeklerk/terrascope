@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { invoke } from "../bridge";
 import { JobProgress } from "./JobProgress";
+import { Select } from "./Select";
 
 /**
  * Classify scene — supervised + unsupervised flows behind a top-level
@@ -271,18 +272,15 @@ export function Classify() {
 
       <div className="grid grid-cols-1 gap-3">
         <Field label="Input raster">
-          <select
+          <Select
             value={rasterSrc}
-            onChange={(e) => setRasterSrc(e.target.value)}
-            className="w-full bg-bg-1 border border-bg-2 rounded px-2 py-1"
-          >
-            <option value="">— pick a raster layer —</option>
-            {rasters.map((l) => (
-              <option key={l.source} value={l.source}>
-                {l.name}
-              </option>
-            ))}
-          </select>
+            onChange={setRasterSrc}
+            placeholder="— pick a raster layer —"
+            options={[
+              { value: "", label: "— pick a raster layer —" },
+              ...rasters.map((l) => ({ value: l.source, label: l.name })),
+            ]}
+          />
         </Field>
 
         {/* SUPERVISED ----------------------------------------------------- */}
@@ -293,18 +291,16 @@ export function Classify() {
               hint="Pick a loaded layer, or Browse to a file on disk (.gpkg, .shp, .geojson…)"
             >
               <div className="flex gap-2">
-                <select
+                <Select
                   value={vectorSrc}
-                  onChange={(e) => setVectorSrc(e.target.value)}
-                  className="flex-1 bg-bg-1 border border-bg-2 rounded px-2 py-1"
-                >
-                  <option value="">— pick a vector layer —</option>
-                  {vectors.map((l) => (
-                    <option key={l.source} value={l.source}>
-                      {l.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setVectorSrc}
+                  placeholder="— pick a vector layer —"
+                  className="flex-1"
+                  options={[
+                    { value: "", label: "— pick a vector layer —" },
+                    ...vectors.map((l) => ({ value: l.source, label: l.name })),
+                  ]}
+                />
                 <button
                   onClick={pickVectorFile}
                   className="px-3 py-1 bg-bg-1 hover:bg-bg-2 border border-bg-2 rounded text-sm whitespace-nowrap"
@@ -316,19 +312,15 @@ export function Classify() {
             </Field>
 
             <Field label="Class field on the vector layer">
-              <select
+              <Select
                 value={classField}
-                onChange={(e) => setClassField(e.target.value)}
+                onChange={setClassField}
                 disabled={!fields.length}
-                className="w-full bg-bg-1 border border-bg-2 rounded px-2 py-1 disabled:opacity-50"
-              >
-                {!fields.length && <option value="">— pick a vector first —</option>}
-                {fields.map((f) => (
-                  <option key={f} value={f}>
-                    {f}
-                  </option>
-                ))}
-              </select>
+                placeholder={
+                  fields.length ? "— pick a field —" : "— pick a vector first —"
+                }
+                options={fields.map((f) => ({ value: f, label: f }))}
+              />
             </Field>
 
             <div className="grid grid-cols-2 gap-3">
@@ -338,17 +330,14 @@ export function Classify() {
                   CLASSIFIERS.find((c) => c.value === classifier)?.hint ?? ""
                 }
               >
-                <select
+                <Select
                   value={classifier}
-                  onChange={(e) => setClassifier(e.target.value)}
-                  className="w-full bg-bg-1 border border-bg-2 rounded px-2 py-1"
-                >
-                  {CLASSIFIERS.map((c) => (
-                    <option key={c.value} value={c.value}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setClassifier}
+                  options={CLASSIFIERS.map((c) => ({
+                    value: c.value,
+                    label: c.label,
+                  }))}
+                />
               </Field>
               <Field
                 label="Trees / boosting rounds"
@@ -388,17 +377,14 @@ export function Classify() {
                 UNSUPERVISED_ALGS.find((a) => a.value === algorithm)?.hint ?? ""
               }
             >
-              <select
+              <Select
                 value={algorithm}
-                onChange={(e) => setAlgorithm(e.target.value)}
-                className="w-full bg-bg-1 border border-bg-2 rounded px-2 py-1"
-              >
-                {UNSUPERVISED_ALGS.map((a) => (
-                  <option key={a.value} value={a.value}>
-                    {a.label}
-                  </option>
-                ))}
-              </select>
+                onChange={setAlgorithm}
+                options={UNSUPERVISED_ALGS.map((a) => ({
+                  value: a.value,
+                  label: a.label,
+                }))}
+              />
             </Field>
 
             <div className="grid grid-cols-2 gap-3">

@@ -92,7 +92,18 @@ export function App() {
         </div>
       </header>
 
-      <main className="flex-1 p-6 overflow-auto">
+      <main
+        className="flex-1 p-6 overflow-auto"
+        // Tell QtWebEngine's compositor that this container will scroll
+        // — gives it a chance to promote it to its own GPU layer.
+        // overscroll-behavior contains scroll chaining so a slow
+        // touchpad fling at the bottom doesn't queue up rubber-band
+        // events all the way back to QGIS's outer canvas.
+        style={{
+          willChange: "scroll-position",
+          overscrollBehavior: "contain",
+        }}
+      >
         {view === "welcome" && <Welcome />}
         {view === "catalog" && <CatalogSearch />}
         {view === "classify" && <Classify />}

@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from "react";
 import { invoke } from "../bridge";
 import { JobProgress } from "./JobProgress";
+import { Select } from "./Select";
 
 /**
  * Accuracy report — two paths, picked by the top-level mode toggle:
@@ -526,49 +527,39 @@ export function Accuracy() {
       {mode === "vector" && (
       <div className="grid grid-cols-1 gap-3">
         <Field label="Classified raster">
-          <select
+          <Select
             value={rasterSrc}
-            onChange={(e) => setRasterSrc(e.target.value)}
-            className="w-full bg-bg-1 border border-bg-2 rounded px-2 py-1"
-          >
-            <option value="">— pick a raster layer —</option>
-            {rasters.map((l) => (
-              <option key={l.source} value={l.source}>
-                {l.name}
-              </option>
-            ))}
-          </select>
+            onChange={setRasterSrc}
+            placeholder="— pick a raster layer —"
+            options={[
+              { value: "", label: "— pick a raster layer —" },
+              ...rasters.map((l) => ({ value: l.source, label: l.name })),
+            ]}
+          />
         </Field>
 
         <Field label="Validation vector (held-out polygons / points)">
-          <select
+          <Select
             value={vectorSrc}
-            onChange={(e) => setVectorSrc(e.target.value)}
-            className="w-full bg-bg-1 border border-bg-2 rounded px-2 py-1"
-          >
-            <option value="">— pick a vector layer —</option>
-            {vectors.map((l) => (
-              <option key={l.source} value={l.source}>
-                {l.name}
-              </option>
-            ))}
-          </select>
+            onChange={setVectorSrc}
+            placeholder="— pick a vector layer —"
+            options={[
+              { value: "", label: "— pick a vector layer —" },
+              ...vectors.map((l) => ({ value: l.source, label: l.name })),
+            ]}
+          />
         </Field>
 
         <Field label="Class field on the validation layer">
-          <select
+          <Select
             value={classField}
-            onChange={(e) => setClassField(e.target.value)}
+            onChange={setClassField}
             disabled={!fields.length}
-            className="w-full bg-bg-1 border border-bg-2 rounded px-2 py-1 disabled:opacity-50"
-          >
-            {!fields.length && <option value="">— pick a vector first —</option>}
-            {fields.map((f) => (
-              <option key={f} value={f}>
-                {f}
-              </option>
-            ))}
-          </select>
+            placeholder={
+              fields.length ? "— pick a field —" : "— pick a vector first —"
+            }
+            options={fields.map((f) => ({ value: f, label: f }))}
+          />
         </Field>
 
         <Field label="Output PDF">
@@ -618,18 +609,15 @@ export function Accuracy() {
             label="Classified raster to sample from"
             hint="Stratified / equalized strategies need the class count from this raster — pick first."
           >
-            <select
+            <Select
               value={genRasterSrc}
-              onChange={(e) => setGenRasterSrc(e.target.value)}
-              className="w-full bg-bg-1 border border-bg-2 rounded px-2 py-1"
-            >
-              <option value="">— pick a raster layer —</option>
-              {rasters.map((l) => (
-                <option key={l.source} value={l.source}>
-                  {l.name}
-                </option>
-              ))}
-            </select>
+              onChange={setGenRasterSrc}
+              placeholder="— pick a raster layer —"
+              options={[
+                { value: "", label: "— pick a raster layer —" },
+                ...rasters.map((l) => ({ value: l.source, label: l.name })),
+              ]}
+            />
             {genRasterSrc && (
               <span className="text-xs text-fg-muted/80 mt-0.5">
                 {genClasses.length > 0
@@ -641,19 +629,13 @@ export function Accuracy() {
 
           <div className="grid grid-cols-2 gap-3">
             <Field label="Strategy" hint={STRATEGY_HINTS[strategy]}>
-              <select
+              <Select
                 value={strategy}
-                onChange={(e) => setStrategy(e.target.value as SamplingStrategy)}
-                className="w-full bg-bg-1 border border-bg-2 rounded px-2 py-1"
-              >
-                {(Object.keys(STRATEGY_LABELS) as SamplingStrategy[]).map(
-                  (k) => (
-                    <option key={k} value={k}>
-                      {STRATEGY_LABELS[k]}
-                    </option>
-                  ),
+                onChange={(v) => setStrategy(v as SamplingStrategy)}
+                options={(Object.keys(STRATEGY_LABELS) as SamplingStrategy[]).map(
+                  (k) => ({ value: k, label: STRATEGY_LABELS[k] }),
                 )}
-              </select>
+              />
             </Field>
             {strategy === "equalized_stratified" ? (
               <Field
@@ -1152,17 +1134,14 @@ function LabellingPad({
             })}
           </div>
         ) : (
-          <select
-            value={picked}
-            onChange={(e) => setPicked(parseInt(e.target.value, 10) || 0)}
-            className="w-full bg-bg-1 border border-bg-2 rounded px-2 py-1"
-          >
-            {classes.map((c) => (
-              <option key={c} value={c}>
-                {nameFor(c)}
-              </option>
-            ))}
-          </select>
+          <Select
+            value={String(picked)}
+            onChange={(v) => setPicked(parseInt(v, 10) || 0)}
+            options={classes.map((c) => ({
+              value: String(c),
+              label: nameFor(c),
+            }))}
+          />
         )}
       </div>
 
