@@ -34,17 +34,18 @@ const BASEMAPS: Record<
   { url: string; options: L.TileLayerOptions }
 > = {
   street: {
-    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    // No `{r}` retina-tile placeholder — on HiDPI laptops the @2x tiles
+    // mean 4× the pixel data per tile, which makes both download and
+    // QtWebEngine composite work proportionally heavier.  Sticking to
+    // 1× tiles costs a little crispness on hidpi screens but the
+    // scrolling/panning experience is far better.
+    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
     options: {
       attribution:
         '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · © <a href="https://carto.com/attributions">CARTO</a>',
       subdomains: "abcd",
       maxZoom: 20,
       keepBuffer: 4,
-      // Defer tile-grid rebuilds until the pan/zoom gesture stops.
-      // Makes the gesture itself glassy at the cost of a brief
-      // blank-edge while tiles load; combined with keepBuffer: 4 the
-      // blank-edge is minimal because tiles are preloaded.
       updateWhenIdle: true,
     },
   },
@@ -560,13 +561,21 @@ export function AoiMap({
           ref={containerRef}
           className="w-full"
           style={{
-            // GPU compositing hint.  We tried `transform: translateZ(0)`
-            // here too, but it created a stacking context on the
-            // OUTER container which broke Leaflet's overlay-pane
-            // rendering — vector layers (AOI rectangle, footprints)
-            // stopped appearing.  `willChange` alone gives the
-            // compositor the hint without forcing a new layer.
+            // GPU compositing hint.  willChange alone gives the
+            // compositor the hint; we deliberately don't add
+            // `transform: translateZ(0)` because that breaks
+            // Leaflet's overlay-pane rendering.
             willChange: "transform",
+            // Isolate the map's paint area from the surrounding
+            // panel.  This is the single most important hint for
+            // scroll perf on HiDPI laptops — without it, every panel
+            // scroll forces the compositor to rasterise the map's
+            // pixels into the surrounding scroll buffer.  With it,
+            // the map gets its own cached layer that scrolls as a
+            // single blit.  `layout style paint` also stops layout
+            // changes inside the map (e.g. tile loads) from
+            // invalidating the panel's layout above.
+            contain: "layout style paint",
             ...(expanded
               ? { flex: "1 1 auto", minHeight: 0 }
               : { aspectRatio: "3 / 2", minHeight: 340 }),

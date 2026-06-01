@@ -301,7 +301,10 @@ export function CatalogSearch() {
   // workflow whose value scales with available width (the embedded map
   // needs room to breathe).  Let it grow to the dock edge.
   return (
-    <section className="w-full">
+    <section
+      className="w-full"
+      style={{ contain: "layout style" }}
+    >
       <h2 className="text-lg font-semibold mb-2">Catalogue search</h2>
 
       <div className="grid grid-cols-2 gap-3">

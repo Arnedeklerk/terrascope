@@ -224,7 +224,10 @@ export function Classify() {
   };
 
   return (
-    <section className="max-w-2xl">
+    <section
+      className="max-w-2xl"
+      style={{ contain: "layout style" }}
+    >
       <div className="flex items-baseline justify-between mb-3">
         <h2 className="text-lg font-semibold">Classify scene</h2>
         <button
