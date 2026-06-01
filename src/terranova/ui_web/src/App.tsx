@@ -94,12 +94,18 @@ export function App() {
 
       <main
         className="flex-1 p-6 overflow-auto"
-        // Tell QtWebEngine's compositor that this container will scroll
-        // — gives it a chance to promote it to its own GPU layer.
+        // Force the scrolling container onto its own GPU compositor
+        // layer.  On HiDPI laptops without this hint, QtWebEngine
+        // re-rasterises the panel content for each scroll-position
+        // delta — at 200% display scaling that's 4× the work per
+        // frame.  With `transform: translateZ(0)` the compositor
+        // caches the content as a texture and scroll = blit.
+        //
         // overscroll-behavior contains scroll chaining so a slow
         // touchpad fling at the bottom doesn't queue up rubber-band
         // events all the way back to QGIS's outer canvas.
         style={{
+          transform: "translateZ(0)",
           willChange: "scroll-position",
           overscrollBehavior: "contain",
         }}

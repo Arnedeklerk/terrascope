@@ -468,7 +468,18 @@ export function CatalogSearch() {
       {err && <p className="text-danger text-sm mt-3">{err}</p>}
 
       {results && (
-        <div className="mt-4 bg-bg-1 border border-bg-2 rounded-md overflow-hidden">
+        <div
+          className="mt-4 bg-bg-1 border border-bg-2 rounded-md overflow-hidden"
+          style={{
+            // Skip rendering this block entirely when it's scrolled
+            // out of the viewport — when the user is at the top of
+            // the panel typing AOI coords, the 50-row results table
+            // costs nothing.  `contain-intrinsic-size` reserves
+            // layout space so the scrollbar position stays stable.
+            contentVisibility: "auto",
+            containIntrinsicSize: "auto 600px",
+          }}
+        >
           <div className="px-3 py-2 flex items-center justify-between border-b border-bg-2">
             <span className="text-xs text-fg-muted">
               {results.length} item{results.length === 1 ? "" : "s"} found
