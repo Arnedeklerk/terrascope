@@ -51,7 +51,9 @@ def write_excel_report(
     center = Alignment(horizontal="center", vertical="center")
 
     row = 1
-    ws.cell(row=row, column=1, value="Terranova accuracy report").font = Font(bold=True, size=14)
+    ws.cell(row=row, column=1, value="Terranova accuracy report").font = Font(
+        bold=True, size=14
+    )
     row += 1
     ws.cell(row=row, column=1, value="Generated").font = bold
     ws.cell(row=row, column=2, value=datetime.utcnow().isoformat(timespec="seconds"))

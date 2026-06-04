@@ -14,7 +14,6 @@ from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
-from .ui.qt_compat import enum_member
 from .version import __version__
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -39,7 +38,6 @@ class TerranovaPlugin:
         self.action_foundation: QAction | None = None
         self.action_timeseries: QAction | None = None
         self.action_cdse: QAction | None = None
-        self.action_deps: QAction | None = None
         self.dock: TerranovaDock | None = None
         self._provider = None  # set in initGui
 
@@ -48,16 +46,6 @@ class TerranovaPlugin:
     # ------------------------------------------------------------------ #
     def initGui(self) -> None:
         """Called by QGIS when the plugin is enabled."""
-        from .ui import deps
-
-        # QGIS 3.x: dependencies installed via our no-admin installer land
-        # in the per-user site-packages, which the QGIS interpreter often
-        # doesn't put on sys.path.  Add it early so those packages import
-        # on the next launch (otherwise the dock keeps re-prompting to
-        # install even though everything is already there).
-        if deps.is_qgis_3():
-            deps.ensure_user_site_on_path()
-
         icon = self._icon()
 
         # Main toolbar button — toggles the dock.
@@ -111,24 +99,11 @@ class TerranovaPlugin:
         self.action_cdse.triggered.connect(self._open_cdse)
         self.iface.addPluginToRasterMenu(PLUGIN_NAME, self.action_cdse)
 
-        # QGIS 3.x only: a recovery entry that pip-installs / repairs the
-        # plugin's Python dependencies (notably the pydantic_core skew that
-        # breaks the dock on the 3.40 series).  4.x is left clean — its
-        # bundled Python installs the deps without fuss.
-        if deps.is_qgis_3():
-            self.action_deps = QAction(
-                icon, "Install / repair dependencies…", self.iface.mainWindow()
-            )
-            self.action_deps.setObjectName("terranova_install_deps")
-            self.action_deps.triggered.connect(self._open_dependency_installer)
-            self.iface.addPluginToRasterMenu(PLUGIN_NAME, self.action_deps)
-
         self._register_processing_provider()
 
     def unload(self) -> None:
         """Called by QGIS when the plugin is disabled or QGIS exits."""
         all_actions = (
-            self.action_deps,
             self.action_cdse,
             self.action_timeseries,
             self.action_foundation,
@@ -152,7 +127,6 @@ class TerranovaPlugin:
         self.action_foundation = None
         self.action_timeseries = None
         self.action_cdse = None
-        self.action_deps = None
 
         if self.dock is not None:
             self.iface.removeDockWidget(self.dock)
@@ -166,92 +140,14 @@ class TerranovaPlugin:
     # ------------------------------------------------------------------ #
     def _toggle_dock(self, checked: bool) -> None:
         if self.dock is None:
-            # Deferred import — keeps Qt (and the third-party stack the dock
-            # pulls in, e.g. pydantic) out of the plugin import path until
-            # the user actually opens the dock.  If any of that is missing
-            # or broken we must not surface a raw traceback: hand off to the
-            # dependency helper instead.
-            from .ui import deps
-
-            # Pick up any deps just installed into the user site (3.x) so a
-            # reopen works without even restarting QGIS.
-            if deps.is_qgis_3():
-                deps.ensure_user_site_on_path()
-
-            try:
-                from .ui.plugin_dock import TerranovaDock
-            except Exception as exc:  # noqa: BLE001 — import-time dep failure
-                if self.action is not None:
-                    self.action.setChecked(False)
-                self._handle_dock_dependency_error(exc)
-                return
+            # Deferred import — keeps Qt out of the plugin import path until
+            # the user actually opens the dock.
+            from .ui.plugin_dock import TerranovaDock
 
             self.dock = TerranovaDock(self.iface)
-            self.iface.addDockWidget(
-                enum_member(Qt, "DockWidgetArea", "RightDockWidgetArea"), self.dock
-            )
+            self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dock)
 
         self.dock.setVisible(checked)
-
-    def _open_dependency_installer(self) -> None:
-        """Manual entry point for the 3.x dependency installer.
-
-        Unlike the dock-open path this is reachable even when nothing has
-        failed yet, so it reports a clean bill of health if all deps are
-        present.
-        """
-        from qgis.PyQt.QtWidgets import QMessageBox
-
-        from .ui import deps
-
-        broken = deps.missing()
-        if not broken:
-            QMessageBox.information(
-                self.iface.mainWindow(),
-                "Terranova",
-                "All required Python packages are installed and importable. "
-                "Nothing to do.",
-            )
-            return
-        dialog = deps.DependencyInstallerDialog(broken, parent=self.iface.mainWindow())
-        dialog.setModal(True)
-        dialog.show()
-        self._deps_dialog = dialog
-
-    def _handle_dock_dependency_error(self, exc: Exception) -> None:
-        """Show a friendly recovery path instead of a traceback.
-
-        On QGIS 3.x (where dependency skew is common) this offers a
-        one-click pip installer.  On 4.x — which we keep deliberately
-        simple — it just points at the standard install command.
-        """
-        from qgis.PyQt.QtWidgets import QMessageBox
-
-        from .ui import deps
-
-        broken = deps.missing()
-        if deps.is_qgis_3() and broken:
-            dialog = deps.DependencyInstallerDialog(broken, parent=self.iface.mainWindow())
-            dialog.setModal(True)
-            dialog.show()
-            # Keep a reference so it isn't garbage-collected mid-install.
-            self._deps_dialog = dialog
-            return
-
-        command = deps.manual_command(broken) if broken else (
-            "pip install --upgrade --force-reinstall pydantic"
-        )
-        QMessageBox.warning(
-            self.iface.mainWindow(),
-            "Terranova",
-            "Terranova couldn't open because a Python dependency is missing or "
-            "out of date:\n\n"
-            f"{exc}\n\n"
-            "Install the dependencies into the QGIS Python environment, then "
-            "restart QGIS:\n\n"
-            f"{command}\n\n"
-            "See the plugin's About page for full, per-platform instructions.",
-        )
 
     def _open_catalog_search(self) -> None:
         from .ui.dialogs.catalog_search import CatalogSearchDialog

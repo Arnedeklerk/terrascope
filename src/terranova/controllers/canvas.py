@@ -28,7 +28,7 @@ if TYPE_CHECKING:  # pragma: no cover
 # stale layers instead of accumulating them in the layer panel as users
 # click through different items / re-pick AOIs.
 _preview_layer_id: str | None = None  # scene footprint, cyan
-_aoi_layer_id: str | None = None  # user AOI, orange dashed
+_aoi_layer_id: str | None = None      # user AOI, orange dashed
 
 
 def bbox(_payload: dict[str, Any]) -> dict[str, Any]:
@@ -60,7 +60,8 @@ def bbox(_payload: dict[str, Any]) -> dict[str, Any]:
 
     if iface is None:
         raise RuntimeError(
-            "QGIS iface is not available — canvas.bbox can only be called from inside QGIS."
+            "QGIS iface is not available — canvas.bbox can only be called "
+            "from inside QGIS."
         )
 
     canvas = iface.mapCanvas()
@@ -79,7 +80,8 @@ def bbox(_payload: dict[str, Any]) -> dict[str, Any]:
 
     if not src_crs.isValid():
         raise ValueError(
-            "Canvas has no valid CRS.  Set one via Project → Properties → CRS and try again."
+            "Canvas has no valid CRS.  Set one via Project → Properties → CRS "
+            "and try again."
         )
 
     # Always transform through CRS84 — even when the source IS EPSG:4326,
@@ -164,7 +166,9 @@ def preview_footprint(payload: dict[str, Any]) -> dict[str, Any]:
         geo_str = geometry if isinstance(geometry, str) else json.dumps(geometry)
         qgs_geom = QgsGeometry.fromJson(geo_str)
         if qgs_geom is None or qgs_geom.isEmpty():
-            raise ValueError(f"could not parse footprint geometry: {geo_str[:120]}…")
+            raise ValueError(
+                f"could not parse footprint geometry: {geo_str[:120]}…"
+            )
     else:
         west, south, east, north = (float(v) for v in bbox_xy)
         qgs_geom = QgsGeometry.fromWkt(
@@ -244,11 +248,14 @@ def show_aoi(payload: dict[str, Any]) -> dict[str, Any]:
         )
 
     qgs_geom = QgsGeometry.fromWkt(
-        f"POLYGON(({west} {south}, {east} {south}, {east} {north}, {west} {north}, {west} {south}))"
+        f"POLYGON(({west} {south}, {east} {south}, "
+        f"{east} {north}, {west} {north}, {west} {south}))"
     )
 
     _remove_aoi_layer()
-    layer = QgsVectorLayer("Polygon?crs=EPSG:4326", "Terranova AOI", "memory")
+    layer = QgsVectorLayer(
+        "Polygon?crs=EPSG:4326", "Terranova AOI", "memory"
+    )
     layer.setCustomProperty("terranova.aoi", "1")
     provider = layer.dataProvider()
     feat = QgsFeature()
@@ -411,7 +418,9 @@ def _build_rect_tool(canvas: Any) -> Any:
                     handle180Crossover=True,
                 )
             except TypeError:
-                wgs = xform.transformBoundingBox(QgsRectangle(x_min, y_min, x_max, y_max))
+                wgs = xform.transformBoundingBox(
+                    QgsRectangle(x_min, y_min, x_max, y_max)
+                )
 
             west, south = wgs.xMinimum(), wgs.yMinimum()
             east, north = wgs.xMaximum(), wgs.yMaximum()
@@ -482,13 +491,14 @@ def _style_outline(
     fill.setColor(QColor(0, 0, 0, 0))  # transparent fill
     fill.setStrokeColor(QColor(*rgb))
     fill.setStrokeWidth(float(width))
-    # PyQt6 (QGIS 4) nests the enum under PenStyle; PyQt5 (QGIS 3.x) has
-    # it flat on Qt.  Try nested first — the flat form does NOT exist on
-    # PyQt6, so it can only be the fallback, never the default.
+    pen_style = Qt.DashLine if dashed else Qt.SolidLine
     try:
-        pen_style = Qt.PenStyle.DashLine if dashed else Qt.PenStyle.SolidLine
-    except AttributeError:  # PyQt5
-        pen_style = Qt.DashLine if dashed else Qt.SolidLine
+        # PyQt6 nests the enum under PenStyle.
+        pen_style = (
+            Qt.PenStyle.DashLine if dashed else Qt.PenStyle.SolidLine
+        )
+    except AttributeError:  # PyQt5 already gave us the flat form.
+        pass
     fill.setStrokeStyle(pen_style)
     symbol.appendSymbolLayer(fill)
     try:

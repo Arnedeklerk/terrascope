@@ -50,8 +50,6 @@ from qgis.PyQt.QtWidgets import (
     QWidget,
 )
 
-from ..qt_compat import enum_member
-
 if TYPE_CHECKING:  # pragma: no cover
     from qgis.gui import QgisInterface
 
@@ -229,13 +227,9 @@ class CatalogSearchDialog(QDialog):
         # ---- results table ------------------------------------------ #
         self.results = QTableWidget(0, 4)
         self.results.setHorizontalHeaderLabels(["ID", "Datetime", "Cloud (%)", "Platform"])
-        self.results.horizontalHeader().setSectionResizeMode(
-            0, enum_member(QHeaderView, "ResizeMode", "Stretch")
-        )
-        self.results.setEditTriggers(enum_member(QTableWidget, "EditTrigger", "NoEditTriggers"))
-        self.results.setSelectionBehavior(
-            enum_member(QTableWidget, "SelectionBehavior", "SelectRows")
-        )
+        self.results.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self.results.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.results.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         root.addWidget(self.results, stretch=1)
 
         # ---- footer buttons ----------------------------------------- #
@@ -317,7 +311,9 @@ class CatalogSearchDialog(QDialog):
                 raise ValueError("canvas has no valid CRS")
             xform = QgsCoordinateTransform(src_crs, wgs84, QgsProject.instance())
             try:
-                wgs_extent = xform.transformBoundingBox(extent, handle180Crossover=True)
+                wgs_extent = xform.transformBoundingBox(
+                    extent, handle180Crossover=True
+                )
             except TypeError:
                 wgs_extent = xform.transformBoundingBox(extent)
             QgsMessageLog.logMessage(
@@ -330,7 +326,8 @@ class CatalogSearchDialog(QDialog):
             )
             if wgs_extent.xMinimum() >= wgs_extent.xMaximum():
                 raise ValueError(
-                    "canvas extent crosses the antimeridian; STAC bboxes can't span ±180°"
+                    "canvas extent crosses the antimeridian; "
+                    "STAC bboxes can't span ±180°"
                 )
         except Exception as exc:  # noqa: BLE001
             QgsMessageLog.logMessage(
@@ -441,11 +438,13 @@ class CatalogSearchDialog(QDialog):
             raise ValueError("Latitudes must be in [-90, 90].")
         if e <= w:
             raise ValueError(
-                "East (bottom-right longitude) must be greater than West (top-left longitude)."
+                "East (bottom-right longitude) must be greater than West "
+                "(top-left longitude)."
             )
         if n <= s:
             raise ValueError(
-                "North (top-left latitude) must be greater than South (bottom-right latitude)."
+                "North (top-left latitude) must be greater than South "
+                "(bottom-right latitude)."
             )
         if self.end_date.date() < self.start_date.date():
             raise ValueError("End date must be on or after start date.")
@@ -465,7 +464,9 @@ class CatalogSearchDialog(QDialog):
         self.progress.setVisible(False)
         self.btn_search.setEnabled(True)
         if self.results.rowCount() == 0:
-            self.iface.messageBar().pushInfo("Terranova", "No items matched the search criteria.")
+            self.iface.messageBar().pushInfo(
+                "Terranova", "No items matched the search criteria."
+            )
 
     def _set(self, row: int, col: int, value: str) -> None:
         self.results.setItem(row, col, QTableWidgetItem(str(value)))
@@ -517,7 +518,9 @@ class CatalogSearchDialog(QDialog):
                 }
             )
         except Exception as exc:  # noqa: BLE001
-            QMessageBox.critical(self, "Download failed to start", f"{type(exc).__name__}: {exc}")
+            QMessageBox.critical(
+                self, "Download failed to start", f"{type(exc).__name__}: {exc}"
+            )
             return
         self.iface.messageBar().pushInfo(
             "Terranova",
