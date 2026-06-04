@@ -83,14 +83,50 @@ class TerranovaDock(QDockWidget):
     # ------------------------------------------------------------------ #
     def _build_fallback(self) -> QWidget:
         msg = QLabel(
-            "QtWebEngine is not available in this QGIS build.\n\n"
-            "Terranova's web panels are disabled, but native dialogs and the\n"
-            "Processing algorithms still work.\n\n"
-            "On Debian/Ubuntu: sudo apt install python3-pyqtwebengine"
+            "The interactive map panel needs QtWebEngine, which isn't "
+            "available in this QGIS build.\n\n"
+            "Everything else still works — the native dialogs (Raster ▸ "
+            "Terranova ▸ Catalogue search / Classify / Accuracy) and the "
+            "Processing algorithms don't need it.\n\n"
+            + self._webengine_hint()
         )
         msg.setWordWrap(True)
+        msg.setTextInteractionFlags(enum_member(Qt, "TextInteractionFlag", "TextSelectableByMouse"))
         msg.setMargin(16)
         return msg
+
+    @staticmethod
+    def _webengine_hint() -> str:
+        """OS-specific guidance for enabling the optional map panel.
+
+        On Windows the Qt binding has to live next to QGIS's own PyQt5
+        (a per-user pip install can't satisfy a submodule of the
+        already-loaded ``PyQt5`` package), so it needs an Administrator
+        shell — hence we surface the exact command rather than a vague
+        ``pip install``.
+        """
+        import sys
+
+        from . import deps
+
+        if sys.platform.startswith("linux"):
+            return "To enable it on Debian/Ubuntu:\n  sudo apt install python3-pyqtwebengine"
+        if sys.platform == "darwin":
+            return (
+                "To enable it (optional), install QtWebEngine into the QGIS\n"
+                "Python environment, then restart QGIS."
+            )
+        # Windows
+        py = deps.python_executable()
+        return (
+            "To enable it (optional) on Windows, run this in an "
+            "Administrator PowerShell, then restart QGIS:\n\n"
+            f'  & "{py}" -m pip install --no-deps '
+            '"PyQtWebEngine==5.15.6" "PyQtWebEngine-Qt5==5.15.2"\n\n'
+            "Admin is required because the binding must be installed next "
+            "to QGIS's own PyQt5. This step is optional — the native "
+            "dialogs above cover the same workflows."
+        )
 
     def _build_dev_hint(self) -> QWidget:
         msg = QLabel(
