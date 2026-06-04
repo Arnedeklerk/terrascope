@@ -14,6 +14,7 @@ from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
+from .ui.qt_compat import enum_member
 from .version import __version__
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -145,7 +146,9 @@ class TerranovaPlugin:
             from .ui.plugin_dock import TerranovaDock
 
             self.dock = TerranovaDock(self.iface)
-            self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dock)
+            self.iface.addDockWidget(
+                enum_member(Qt, "DockWidgetArea", "RightDockWidgetArea"), self.dock
+            )
 
         self.dock.setVisible(checked)
 

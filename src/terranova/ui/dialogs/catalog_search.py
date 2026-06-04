@@ -50,6 +50,8 @@ from qgis.PyQt.QtWidgets import (
     QWidget,
 )
 
+from ..qt_compat import enum_member
+
 if TYPE_CHECKING:  # pragma: no cover
     from qgis.gui import QgisInterface
 
@@ -227,9 +229,15 @@ class CatalogSearchDialog(QDialog):
         # ---- results table ------------------------------------------ #
         self.results = QTableWidget(0, 4)
         self.results.setHorizontalHeaderLabels(["ID", "Datetime", "Cloud (%)", "Platform"])
-        self.results.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        self.results.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self.results.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.results.horizontalHeader().setSectionResizeMode(
+            0, enum_member(QHeaderView, "ResizeMode", "Stretch")
+        )
+        self.results.setEditTriggers(
+            enum_member(QTableWidget, "EditTrigger", "NoEditTriggers")
+        )
+        self.results.setSelectionBehavior(
+            enum_member(QTableWidget, "SelectionBehavior", "SelectRows")
+        )
         root.addWidget(self.results, stretch=1)
 
         # ---- footer buttons ----------------------------------------- #

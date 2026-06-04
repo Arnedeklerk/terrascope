@@ -15,6 +15,7 @@ from qgis.PyQt.QtCore import Qt, QUrl
 from qgis.PyQt.QtWidgets import QDockWidget, QLabel, QVBoxLayout, QWidget
 
 from ..bridge import Bridge
+from .qt_compat import enum_member
 
 if TYPE_CHECKING:  # pragma: no cover
     from qgis.gui import QgisInterface
@@ -29,7 +30,7 @@ class TerranovaDock(QDockWidget):
         super().__init__("Terranova")
         self.iface = iface
         self.setObjectName("TerranovaDock")
-        self.setAllowedAreas(Qt.DockWidgetArea.AllDockWidgetAreas)
+        self.setAllowedAreas(enum_member(Qt, "DockWidgetArea", "AllDockWidgetAreas"))
         self.setMinimumWidth(360)
 
         self.bridge = Bridge()
@@ -99,7 +100,9 @@ class TerranovaDock(QDockWidget):
             f"Expected at:\n{WEB_DIST / 'index.html'}"
         )
         msg.setWordWrap(True)
-        msg.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        msg.setTextInteractionFlags(
+            enum_member(Qt, "TextInteractionFlag", "TextSelectableByMouse")
+        )
         msg.setMargin(16)
         return msg
 

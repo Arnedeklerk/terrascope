@@ -21,9 +21,14 @@ license=GPL-3.0-or-later
 plugin_dependencies=
 changelog=
     1.0.2 (2026-06)
+    - QGIS 3.x (PyQt5) compatibility: the dock and native dialogs no
+      longer assume PyQt6-only enum syntax, so the plugin loads on the
+      3.40 LTR series as well as QGIS 4.x.
     - Declare the plugin's external Python dependencies and how to
       install them in the About metadata (per plugins.qgis.org
-      guidelines).  No functional change.
+      guidelines).
+    - Ship only runtime files (exclude the web dev tooling and source
+      from the package); minor code-quality cleanups.
     1.0.1 (2026-06)
     - Beta-features toggle: time-series, SAM, foundation models and CDSE
       are hidden by default behind a header switch.

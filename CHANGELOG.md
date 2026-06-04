@@ -6,14 +6,28 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.0.2] — 2026-06
 
+### Fixed
+
+- QGIS 3.x (PyQt5) compatibility. The dock and the native catalogue
+  dialog used PyQt6-only nested enum syntax (e.g.
+  `Qt.DockWidgetArea.RightDockWidgetArea`) in a few unguarded places,
+  which raised `AttributeError` on QGIS 3.x. Added a small binding
+  shim (`ui/qt_compat.enum_member`) and routed those sites through it,
+  so the plugin loads on the 3.40 LTR series as well as QGIS 4.x. Also
+  corrected a latent pen-style fallback that had the PyQt5/PyQt6 order
+  reversed.
+
 ### Changed
 
 - The plugin's external Python dependencies (pystac-client, odc-stac,
   rasterio, rioxarray, scikit-learn, reportlab, and the optional
   lightgbm / xgboost / torch / terratorch / segment-geospatial /
   openpyxl) and how to install them are now declared in the About
-  metadata, per the plugins.qgis.org publishing guidelines. No
-  functional change.
+  metadata, per the plugins.qgis.org publishing guidelines.
+- The packaged plugin ships only runtime files — the web dev tooling
+  (serve scripts, ESLint/Vite/TS configs) and the TypeScript source are
+  excluded from the zip via `.gitattributes export-ignore`. Minor
+  flake8 cleanups (unused import/variable, ambiguous name).
 
 ## [1.0.1] — 2026-06
 

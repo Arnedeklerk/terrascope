@@ -491,14 +491,13 @@ def _style_outline(
     fill.setColor(QColor(0, 0, 0, 0))  # transparent fill
     fill.setStrokeColor(QColor(*rgb))
     fill.setStrokeWidth(float(width))
-    pen_style = Qt.DashLine if dashed else Qt.SolidLine
+    # PyQt6 (QGIS 4) nests the enum under PenStyle; PyQt5 (QGIS 3.x) has
+    # it flat on Qt.  Try nested first — the flat form does NOT exist on
+    # PyQt6, so it can only be the fallback, never the default.
     try:
-        # PyQt6 nests the enum under PenStyle.
-        pen_style = (
-            Qt.PenStyle.DashLine if dashed else Qt.PenStyle.SolidLine
-        )
-    except AttributeError:  # PyQt5 already gave us the flat form.
-        pass
+        pen_style = Qt.PenStyle.DashLine if dashed else Qt.PenStyle.SolidLine
+    except AttributeError:  # PyQt5
+        pen_style = Qt.DashLine if dashed else Qt.SolidLine
     fill.setStrokeStyle(pen_style)
     symbol.appendSymbolLayer(fill)
     try:
