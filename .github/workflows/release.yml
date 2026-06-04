@@ -79,6 +79,12 @@ jobs:
             exit 0
           fi
           python -m pip install --upgrade qgis-plugin-ci
+          # -c / --allow-uncommitted-changes: the earlier build + package
+          # steps leave the working tree dirty (regenerated dist, npm
+          # touching package-lock).  This flag makes qgis-plugin-ci stash
+          # that and archive the committed tag instead — which already
+          # contains the correct dist bundle + metadata.txt.
           qgis-plugin-ci release "${GITHUB_REF_NAME#v}" \
             --release-tag "$GITHUB_REF_NAME" \
+            --allow-uncommitted-changes \
             --qgis-token "$QGIS_TOKEN"
