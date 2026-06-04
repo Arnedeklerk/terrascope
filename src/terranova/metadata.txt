@@ -3,8 +3,9 @@ name=Terranova
 qgisMinimumVersion=3.40
 qgisMaximumVersion=4.99
 description=Earth-observation toolkit for QGIS: STAC search, classical + deep-learning classification, time-series change detection.
-about=Terranova is an open-source QGIS plugin for modern Earth observation. STAC catalogue search and COG download from Planetary Computer / Earth Search / Copernicus Data Space; an embedded interactive map (Leaflet) for picking AOIs and inspecting scene footprints; classical (Random Forest / LightGBM / XGBoost) and deep-learning (Prithvi, Clay, SAM via TerraTorch + segment-geospatial) classification; accuracy reports; time-series change detection (CuSum, BFAST, LandTrendr). Dual UI: native Qt dialogs (compatibility) and a React dock panel via QtWebEngine (primary). GPL-3.0-or-later.
-version=1.0.1
+about=Terranova is an open-source QGIS plugin for modern Earth observation: STAC catalogue search and Cloud-Optimised-GeoTIFF download from Planetary Computer / Earth Search / Copernicus Data Space, an embedded interactive map for picking areas of interest and inspecting scene footprints, classical and deep-learning classification, accuracy assessment with PDF and Excel reports, and per-pixel time-series change detection. It offers native Qt dialogs plus a modern React dock panel via QtWebEngine.
+    External dependencies (NOT bundled with QGIS): the core features need the Python packages pystac-client, odc-stac, rasterio, rioxarray, scikit-learn and reportlab; the LightGBM and XGBoost classifiers additionally need lightgbm and xgboost; Excel export needs openpyxl; the optional Beta deep-learning features (Prithvi / Clay fine-tuning, SAM segmentation) further require torch, terratorch and segment-geospatial. Install them into the QGIS Python environment — on Windows use the OSGeo4W Shell, e.g. "pip install pystac-client odc-stac rasterio rioxarray scikit-learn reportlab openpyxl". Full per-platform instructions are in the repository README. Any feature whose dependency is missing reports a clear message instead of crashing. Licensed under GPL-3.0-or-later.
+version=1.0.2
 author=Cole Battell, Arne de Klerk
 email=colebattell@gmail.com
 homepage=https://github.com/TerranovaEO/terranova
@@ -19,6 +20,10 @@ category=Raster
 license=GPL-3.0-or-later
 plugin_dependencies=
 changelog=
+    1.0.2 (2026-06)
+    - Declare the plugin's external Python dependencies and how to
+      install them in the About metadata (per plugins.qgis.org
+      guidelines).  No functional change.
     1.0.1 (2026-06)
     - Beta-features toggle: time-series, SAM, foundation models and CDSE
       are hidden by default behind a header switch.
