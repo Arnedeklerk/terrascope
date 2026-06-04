@@ -100,9 +100,7 @@ class TerranovaDock(QDockWidget):
             f"Expected at:\n{WEB_DIST / 'index.html'}"
         )
         msg.setWordWrap(True)
-        msg.setTextInteractionFlags(
-            enum_member(Qt, "TextInteractionFlag", "TextSelectableByMouse")
-        )
+        msg.setTextInteractionFlags(enum_member(Qt, "TextInteractionFlag", "TextSelectableByMouse"))
         msg.setMargin(16)
         return msg
 
