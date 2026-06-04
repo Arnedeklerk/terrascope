@@ -2,7 +2,7 @@
 
 > Earth observation for QGIS.
 
-A modern QGIS 3.40+ / 4.x plugin for STAC catalogue search, classification, accuracy assessment, and time-series change detection.
+A modern QGIS 4.0+ plugin for STAC catalogue search, classification, accuracy assessment, and time-series change detection. (QGIS 4.x only — built on PyQt6 / QtWebEngine.)
 
 ## Why Terranova
 

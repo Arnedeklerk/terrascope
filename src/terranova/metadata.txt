@@ -1,11 +1,11 @@
 [general]
 name=Terranova
-qgisMinimumVersion=3.40
+qgisMinimumVersion=4.0
 qgisMaximumVersion=4.99
 description=Earth-observation toolkit for QGIS: STAC search, classical + deep-learning classification, time-series change detection.
-about=Terranova is an open-source QGIS plugin for modern Earth observation: STAC catalogue search and Cloud-Optimised-GeoTIFF download from Planetary Computer / Earth Search / Copernicus Data Space, an embedded interactive map for picking areas of interest and inspecting scene footprints, classical and deep-learning classification, accuracy assessment with PDF and Excel reports, and per-pixel time-series change detection. It offers native Qt dialogs plus a modern React dock panel via QtWebEngine.
+about=Terranova is an open-source QGIS plugin for modern Earth observation: STAC catalogue search and Cloud-Optimised-GeoTIFF download from Planetary Computer / Earth Search / Copernicus Data Space, an embedded interactive map for picking areas of interest and inspecting scene footprints, classical and deep-learning classification, accuracy assessment with PDF and Excel reports, and per-pixel time-series change detection. It offers native Qt dialogs plus a modern React dock panel via QtWebEngine. Requires QGIS 4.0 or newer (built on PyQt6); it is not supported on the QGIS 3.x / PyQt5 series.
     External dependencies (NOT bundled with QGIS): the core features need the Python packages pystac-client, odc-stac, rasterio, rioxarray, scikit-learn and reportlab; the LightGBM and XGBoost classifiers additionally need lightgbm and xgboost; Excel export needs openpyxl; the optional Beta deep-learning features (Prithvi / Clay fine-tuning, SAM segmentation) further require torch, terratorch and segment-geospatial. Install them into the QGIS Python environment — on Windows use the OSGeo4W Shell, e.g. "pip install pystac-client odc-stac rasterio rioxarray scikit-learn reportlab openpyxl". Full per-platform instructions are in the repository README. Any feature whose dependency is missing reports a clear message instead of crashing. Licensed under GPL-3.0-or-later.
-version=1.0.2
+version=1.0.3
 author=Cole Battell, Arne de Klerk
 email=colebattell@gmail.com
 homepage=https://github.com/TerranovaEO/terranova
@@ -20,6 +20,10 @@ category=Raster
 license=GPL-3.0-or-later
 plugin_dependencies=
 changelog=
+    1.0.3 (2026-06)
+    - Officially target QGIS 4.0+ only (qgisMinimumVersion raised to
+      4.0). The plugin is built on PyQt6 and uses QtWebEngine for its
+      map dock; the QGIS 3.x / PyQt5 LTR series is not supported.
     1.0.2 (2026-06)
     - Declare the plugin's external Python dependencies and how to
       install them in the About metadata (per plugins.qgis.org

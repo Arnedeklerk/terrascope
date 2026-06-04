@@ -2,9 +2,9 @@
 
 ## Requirements
 
-- **QGIS** 3.40 LTR or any 4.x.
-- **Python** 3.10, 3.11, or 3.12 (whichever your QGIS bundles).
-- **Operating system**: Windows 10/11, macOS 12+, or any Linux that ships QGIS 3.40+.
+- **QGIS** 4.0 or newer. Terranova is built on PyQt6 / QtWebEngine and is not supported on the QGIS 3.x (PyQt5) series.
+- **Python** 3.11 or 3.12 (whichever your QGIS bundles).
+- **Operating system**: Windows 10/11, macOS 12+, or any Linux that ships QGIS 4.x.
 
 GPU acceleration for the foundation-model path needs a CUDA-capable NVIDIA card with ≥ 8 GB VRAM (Clay) or ≥ 16 GB (Prithvi-EO-2.0 600 M).
 

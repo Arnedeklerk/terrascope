@@ -10,7 +10,7 @@ Exactly six fields per event:
 |-------|---------|-------|
 | `event_name` | `classification.run` | The action you performed |
 | `plugin_version` | `0.1.0` | Correlate with releases |
-| `qgis_version` | `3.40.1` | Platform support |
+| `qgis_version` | `4.0.2` | Platform support |
 | `os` | `Windows 11` | Coarse OS string from `platform.system()` + `platform.release()` |
 | `installation_id` | random UUID v4 | Distinguishes installs without identifying you |
 | `timestamp` | `2026-05-23T14:07:11Z` | UTC ISO 8601 |

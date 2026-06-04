@@ -2,7 +2,9 @@
 
 > Earth observation for QGIS.
 
-A modern QGIS plugin (3.40+ / 4.x) for STAC search, classification, accuracy reporting, and time-series change detection. Built on a STAC-first, COG / xarray pipeline with native Qt dialogs *and* a React-in-QWebEngine dock with an embedded interactive Leaflet map for AOI picking and footprint inspection.
+A modern QGIS plugin (**4.0+**) for STAC search, classification, accuracy reporting, and time-series change detection. Built on a STAC-first, COG / xarray pipeline with native Qt dialogs *and* a React-in-QWebEngine dock with an embedded interactive Leaflet map for AOI picking and footprint inspection.
+
+> **QGIS 4.x only.** Terranova is built on PyQt6 and QtWebEngine and targets QGIS 4.0 or newer. It is not supported on the QGIS 3.x / PyQt5 LTR series.
 
 **Status:** experimental — usable end-to-end for catalogue search + classification + change detection, but expect rough edges.
 
@@ -18,7 +20,7 @@ The Semi-Automatic Classification Plugin (SCP) is the de-facto QGIS plugin for s
 - **STAC + COG everywhere.** Search Planetary Computer, Earth Search, and CDSE; build lazy xarray cubes without scene-by-scene download.
 - **Foundation models.** Prithvi-EO-2.0, Clay v1.5, TerraMind, SAM 3 — via [TerraTorch](https://github.com/IBM/terratorch) and segment-geospatial.
 - **Time-series.** BFAST, LandTrendr, CCDC running per-pixel on Zarr cubes.
-- **Modern UI.** Command palette, wizards, dark mode, embedded React via QtWebEngine (safe since QGIS 3.36).
+- **Modern UI.** Command palette, wizards, dark mode, embedded React via QtWebEngine (QGIS 4.x / PyQt6).
 
 ## Architecture
 

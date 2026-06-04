@@ -21,7 +21,7 @@ Telemetry is **off by default**. On first run, Terranova asks once: "Help us imp
 |-------|---------|---------|
 | `event_name` | `classification.run` | Which feature you used |
 | `plugin_version` | `0.1.0` | So we can correlate with releases |
-| `qgis_version` | `3.40.1` | So we know which QGIS versions to support |
+| `qgis_version` | `4.0.2` | So we know which QGIS versions to support |
 | `os` | `Windows 11` | Platform coverage |
 | `installation_id` | `c4f1...` (random UUID v4, locally generated) | Distinguish unique installs without identifying you |
 | `timestamp` | `2026-05-23T14:07:11Z` | When the event happened |

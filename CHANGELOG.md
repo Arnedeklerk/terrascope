@@ -4,6 +4,15 @@ All notable changes to Terranova are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] — 2026-06
+
+### Changed
+
+- Terranova now officially targets **QGIS 4.0 or newer**
+  (`qgisMinimumVersion` raised to 4.0). The plugin is built on PyQt6 and
+  uses QtWebEngine for its interactive map dock; the QGIS 3.x / PyQt5 LTR
+  series is not supported.
+
 ## [1.0.2] — 2026-06
 
 ### Changed
