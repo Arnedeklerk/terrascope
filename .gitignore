@@ -5,7 +5,10 @@ __pycache__/
 *.so
 .Python
 build/
-dist/
+# Anchored to repo root so it only ignores the packaging output dir
+# (make package + python build), NOT src/terranova/ui_web/dist which is
+# a committed build artefact.
+/dist/
 *.egg-info/
 *.egg
 .pytest_cache/
@@ -31,7 +34,11 @@ Thumbs.db
 # Node / web tier
 node_modules/
 src/terranova/ui_web/node_modules/
-src/terranova/ui_web/dist/
+# NOTE: src/terranova/ui_web/dist/ is intentionally NOT ignored — the
+# built bundle is committed so (a) qgis-plugin-ci can package it into
+# the released plugin (it archives git-tracked files only) and (b)
+# cloning + linking the plugin works without a Node toolchain.  Rebuild
+# and commit dist when the UI changes.
 deploy/cloudflare-worker/node_modules/
 deploy/cloudflare-worker/.wrangler/
 *.tsbuildinfo
@@ -55,4 +62,3 @@ installation_id
 
 # Packaging artefacts
 terranova-*.zip
-src/terranova/metadata.txt

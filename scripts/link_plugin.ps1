@@ -25,7 +25,9 @@ function Die($msg)           { Write-Host "ERROR: $msg" -ForegroundColor Red; ex
 
 # --- locate source ---------------------------------------------------------
 $srcPackage = Join-Path $RepoRoot "src\terranova"
-$metadata   = Join-Path $RepoRoot "metadata.txt"
+# metadata.txt now lives inside the package (standard QGIS layout), so it
+# rides along with the junction automatically — no separate copy needed.
+$metadata   = Join-Path $srcPackage "metadata.txt"
 if (-not (Test-Path $srcPackage)) { Die "Source not found: $srcPackage" }
 if (-not (Test-Path $metadata))   { Die "metadata.txt not found: $metadata" }
 
@@ -94,11 +96,7 @@ if (Test-Path $dest) {
 Write-Step "Creating junction"
 New-Item -ItemType Junction -Path $dest -Target $srcPackage | Out-Null
 Write-Ok "$dest -> $srcPackage"
-
-# --- copy metadata.txt (lives one level above the package) -----------------
-Write-Step "Copying metadata.txt"
-Copy-Item $metadata (Join-Path $dest "metadata.txt") -Force
-Write-Ok "metadata.txt placed."
+Write-Ok "metadata.txt rides along inside the package (no copy needed)."
 
 # --- check the web bundle exists; warn if not ------------------------------
 $distIndex = Join-Path $srcPackage "ui_web\dist\index.html"

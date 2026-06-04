@@ -17,7 +17,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION_PY = ROOT / "src" / "terranova" / "version.py"
-METADATA = ROOT / "metadata.txt"
+METADATA = ROOT / "src" / "terranova" / "metadata.txt"
 PYPROJECT = ROOT / "pyproject.toml"
 
 _VERSION_RE = re.compile(r'__version__\s*=\s*"([^"]+)"')

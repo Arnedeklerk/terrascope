@@ -45,7 +45,6 @@ deploy: ui-build
 	@mkdir -p "$(PROFILE_DIR)"
 	@rm -rf "$(PROFILE_DIR)/$(PLUGIN_NAME)"
 	@cp -r $(SRC) "$(PROFILE_DIR)/$(PLUGIN_NAME)"
-	@cp metadata.txt "$(PROFILE_DIR)/$(PLUGIN_NAME)/metadata.txt"
 
 undeploy:
 	@rm -rf "$(PROFILE_DIR)/$(PLUGIN_NAME)"
@@ -54,7 +53,8 @@ package: ui-build
 	@mkdir -p dist
 	@rm -rf dist/$(PLUGIN_NAME)
 	@cp -r $(SRC) dist/$(PLUGIN_NAME)
-	@cp metadata.txt dist/$(PLUGIN_NAME)/metadata.txt
+	# metadata.txt now lives inside $(SRC), so the cp -r above already
+	# brings it — no separate copy needed.
 	# Strip dev/build-only cruft — QGIS only loads the .py files, the
 	# built ui_web/dist bundle, and resources at runtime.  Without this
 	# the zip would carry node_modules (hundreds of MB) + the TS source.
@@ -75,8 +75,8 @@ package: ui-build
 	        dist/$(PLUGIN_NAME)/ui_web/tsconfig.tsbuildinfo
 	@find dist/$(PLUGIN_NAME) -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	@find dist/$(PLUGIN_NAME) -type f -name '*.pyc' -delete 2>/dev/null || true
-	@cd dist && rm -f $(PLUGIN_NAME)-*.zip && zip -rq $(PLUGIN_NAME)-$$(grep '^version=' ../metadata.txt | cut -d= -f2).zip $(PLUGIN_NAME)
-	@echo "Packaged dist/$(PLUGIN_NAME)-$$(grep '^version=' metadata.txt | cut -d= -f2).zip"
+	@cd dist && rm -f $(PLUGIN_NAME)-*.zip && zip -rq $(PLUGIN_NAME)-$$(grep '^version=' ../$(SRC)/metadata.txt | cut -d= -f2).zip $(PLUGIN_NAME)
+	@echo "Packaged dist/$(PLUGIN_NAME)-$$(grep '^version=' $(SRC)/metadata.txt | cut -d= -f2).zip"
 
 clean:
 	rm -rf build dist *.egg-info .pytest_cache .mypy_cache .ruff_cache

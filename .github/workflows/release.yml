@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # qgis-plugin-ci reads git history + tags; shallow clone breaks it.
+          # qgis-plugin-ci reads git history + tags; a shallow clone breaks it.
           fetch-depth: 0
 
       - uses: actions/setup-python@v5
@@ -25,11 +25,24 @@ jobs:
         with:
           node-version: "20"
 
+      # Rebuild the web bundle and fail loudly if it differs from what's
+      # committed — the committed src/terranova/ui_web/dist is what ends up
+      # in the published plugin (qgis-plugin-ci archives tracked files), so
+      # a stale commit would ship a stale UI.
       - name: Build web tier
         working-directory: src/terranova/ui_web
         run: |
           npm ci || npm install
           npm run build
+
+      - name: Fail if committed web bundle is stale
+        run: |
+          if ! git diff --quiet -- src/terranova/ui_web/dist; then
+            echo "::error::src/terranova/ui_web/dist differs from a fresh build."
+            echo "Run 'npm run build' in src/terranova/ui_web, commit the result, and re-tag."
+            git --no-pager diff --stat -- src/terranova/ui_web/dist
+            exit 1
+          fi
 
       - name: Verify version sync
         run: python scripts/sync_version.py
@@ -43,41 +56,23 @@ jobs:
           files: dist/terranova-*.zip
           generate_release_notes: true
 
-      # Publish the new version to plugins.qgis.org.  Skips cleanly (does
-      # not fail the workflow) when the OSGEO_PASSWORD secret isn't set, so
-      # tagging still produces a GitHub release even before credentials are
-      # configured.
+      # Publish the new version to plugins.qgis.org with the per-plugin API
+      # token (preferred over OSGeo username/password — scoped + revocable).
+      # Skips cleanly (does NOT fail the run) when the token secret is unset,
+      # so tagging still cuts a GitHub release before credentials exist.
       #
-      # IMPORTANT: this can only ADD a version to a plugin that already
-      # exists on plugins.qgis.org.  The very first version of a brand-new
-      # plugin must be uploaded once through the web form
-      # (https://plugins.qgis.org/plugins/add/) and approved by a
-      # moderator.  After that, every tagged release auto-publishes here.
+      # The very first version of a brand-new plugin must be created once via
+      # the web form (https://plugins.qgis.org/plugins/add/) and approved by a
+      # moderator.  After the plugin record exists, every tag auto-publishes.
       - name: Publish to plugins.qgis.org
         env:
-          OSGEO_USERNAME: ${{ secrets.OSGEO_USERNAME }}
-          OSGEO_PASSWORD: ${{ secrets.OSGEO_PASSWORD }}
+          QGIS_TOKEN: ${{ secrets.QGIS_TOKEN }}
         run: |
-          if [ -z "$OSGEO_PASSWORD" ]; then
-            echo "::notice::OSGEO_PASSWORD secret not set — skipping plugins.qgis.org upload."
+          if [ -z "$QGIS_TOKEN" ]; then
+            echo "::notice::QGIS_TOKEN secret not set — skipping plugins.qgis.org upload."
             exit 0
           fi
           python -m pip install --upgrade qgis-plugin-ci
-
-          # qgis-plugin-ci builds its upload archive from the git tree.
-          # Our web bundle (ui_web/dist) is a gitignored build artefact and
-          # metadata.txt lives at the repo root, not inside plugin_path —
-          # so stage + commit both into a throwaway local commit (never
-          # pushed; the runner is ephemeral) to make the archived tree
-          # complete and correctly laid out.
-          cp metadata.txt src/terranova/metadata.txt
-          git config user.email "ci@terranova"
-          git config user.name "Terranova CI"
-          git add -f src/terranova/ui_web/dist src/terranova/metadata.txt
-          git commit -m "ci: bundle built assets for packaging" --no-verify
-
-          VERSION="${GITHUB_REF_NAME#v}"
-          qgis-plugin-ci release "$VERSION" \
-            --allow-uncommitted-changes \
-            --osgeo-username "$OSGEO_USERNAME" \
-            --osgeo-password "$OSGEO_PASSWORD"
+          qgis-plugin-ci release "${GITHUB_REF_NAME#v}" \
+            --release-tag "$GITHUB_REF_NAME" \
+            --qgis-token "$QGIS_TOKEN"

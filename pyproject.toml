@@ -102,7 +102,6 @@ packages = ["src/terranova"]
 [tool.hatch.build.targets.sdist]
 include = [
     "src/terranova",
-    "metadata.txt",
     "README.md",
     "LICENSE",
     "CHANGELOG.md",

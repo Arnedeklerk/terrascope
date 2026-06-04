@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-META = REPO_ROOT / "metadata.txt"
+META = REPO_ROOT / "src" / "terranova" / "metadata.txt"
 
 pytestmark = pytest.mark.unit
 
