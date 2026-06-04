@@ -9,28 +9,75 @@ permissions:
   contents: write
 
 jobs:
-  package:
-    name: Build .zip + GitHub Release
+  release:
+    name: Build .zip, GitHub Release, publish to plugins.qgis.org
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # qgis-plugin-ci reads git history + tags; shallow clone breaks it.
+          fetch-depth: 0
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+
       - name: Build web tier
         working-directory: src/terranova/ui_web
         run: |
           npm ci || npm install
           npm run build
+
       - name: Verify version sync
         run: python scripts/sync_version.py
+
       - name: Package
         run: make package
+
       - name: GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: dist/terranova-*.zip
           generate_release_notes: true
+
+      # Publish the new version to plugins.qgis.org.  Skips cleanly (does
+      # not fail the workflow) when the OSGEO_PASSWORD secret isn't set, so
+      # tagging still produces a GitHub release even before credentials are
+      # configured.
+      #
+      # IMPORTANT: this can only ADD a version to a plugin that already
+      # exists on plugins.qgis.org.  The very first version of a brand-new
+      # plugin must be uploaded once through the web form
+      # (https://plugins.qgis.org/plugins/add/) and approved by a
+      # moderator.  After that, every tagged release auto-publishes here.
+      - name: Publish to plugins.qgis.org
+        env:
+          OSGEO_USERNAME: ${{ secrets.OSGEO_USERNAME }}
+          OSGEO_PASSWORD: ${{ secrets.OSGEO_PASSWORD }}
+        run: |
+          if [ -z "$OSGEO_PASSWORD" ]; then
+            echo "::notice::OSGEO_PASSWORD secret not set — skipping plugins.qgis.org upload."
+            exit 0
+          fi
+          python -m pip install --upgrade qgis-plugin-ci
+
+          # qgis-plugin-ci builds its upload archive from the git tree.
+          # Our web bundle (ui_web/dist) is a gitignored build artefact and
+          # metadata.txt lives at the repo root, not inside plugin_path —
+          # so stage + commit both into a throwaway local commit (never
+          # pushed; the runner is ephemeral) to make the archived tree
+          # complete and correctly laid out.
+          cp metadata.txt src/terranova/metadata.txt
+          git config user.email "ci@terranova"
+          git config user.name "Terranova CI"
+          git add -f src/terranova/ui_web/dist src/terranova/metadata.txt
+          git commit -m "ci: bundle built assets for packaging" --no-verify
+
+          VERSION="${GITHUB_REF_NAME#v}"
+          qgis-plugin-ci release "$VERSION" \
+            --allow-uncommitted-changes \
+            --osgeo-username "$OSGEO_USERNAME" \
+            --osgeo-password "$OSGEO_PASSWORD"

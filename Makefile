@@ -55,7 +55,28 @@ package: ui-build
 	@rm -rf dist/$(PLUGIN_NAME)
 	@cp -r $(SRC) dist/$(PLUGIN_NAME)
 	@cp metadata.txt dist/$(PLUGIN_NAME)/metadata.txt
-	@cd dist && zip -r $(PLUGIN_NAME)-$$(grep '^version=' ../metadata.txt | cut -d= -f2).zip $(PLUGIN_NAME)
+	# Strip dev/build-only cruft — QGIS only loads the .py files, the
+	# built ui_web/dist bundle, and resources at runtime.  Without this
+	# the zip would carry node_modules (hundreds of MB) + the TS source.
+	@rm -rf dist/$(PLUGIN_NAME)/ui_web/node_modules
+	@rm -rf dist/$(PLUGIN_NAME)/ui_web/src
+	@rm -f  dist/$(PLUGIN_NAME)/ui_web/package.json \
+	        dist/$(PLUGIN_NAME)/ui_web/package-lock.json \
+	        dist/$(PLUGIN_NAME)/ui_web/tsconfig.json \
+	        dist/$(PLUGIN_NAME)/ui_web/vite.config.ts \
+	        dist/$(PLUGIN_NAME)/ui_web/tailwind.config.ts \
+	        dist/$(PLUGIN_NAME)/ui_web/postcss.config.js \
+	        dist/$(PLUGIN_NAME)/ui_web/.eslintrc.json \
+	        dist/$(PLUGIN_NAME)/ui_web/index.html \
+	        dist/$(PLUGIN_NAME)/ui_web/vite-env.d.ts \
+	        dist/$(PLUGIN_NAME)/ui_web/serve.bat \
+	        dist/$(PLUGIN_NAME)/ui_web/serve.ps1 \
+	        dist/$(PLUGIN_NAME)/ui_web/README.md \
+	        dist/$(PLUGIN_NAME)/ui_web/tsconfig.tsbuildinfo
+	@find dist/$(PLUGIN_NAME) -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+	@find dist/$(PLUGIN_NAME) -type f -name '*.pyc' -delete 2>/dev/null || true
+	@cd dist && rm -f $(PLUGIN_NAME)-*.zip && zip -rq $(PLUGIN_NAME)-$$(grep '^version=' ../metadata.txt | cut -d= -f2).zip $(PLUGIN_NAME)
+	@echo "Packaged dist/$(PLUGIN_NAME)-$$(grep '^version=' metadata.txt | cut -d= -f2).zip"
 
 clean:
 	rm -rf build dist *.egg-info .pytest_cache .mypy_cache .ruff_cache

@@ -4,7 +4,7 @@ qgisMinimumVersion=3.40
 qgisMaximumVersion=4.99
 description=Earth-observation toolkit for QGIS: STAC search, classical + deep-learning classification, time-series change detection.
 about=Terranova is an open-source QGIS plugin for modern Earth observation. STAC catalogue search and COG download from Planetary Computer / Earth Search / Copernicus Data Space; an embedded interactive map (Leaflet) for picking AOIs and inspecting scene footprints; classical (Random Forest / LightGBM / XGBoost) and deep-learning (Prithvi, Clay, SAM via TerraTorch + segment-geospatial) classification; accuracy reports; time-series change detection (CuSum, BFAST, LandTrendr). Dual UI: native Qt dialogs (compatibility) and a React dock panel via QtWebEngine (primary). GPL-3.0-or-later.
-version=1.0.0
+version=1.0.1
 author=Cole Battell, Arne de Klerk
 email=colebattell@gmail.com
 homepage=https://github.com/TerranovaEO/terranova
@@ -19,6 +19,17 @@ category=Raster
 license=GPL-3.0-or-later
 plugin_dependencies=
 changelog=
+    1.0.1 (2026-06)
+    - Beta-features toggle: time-series, SAM, foundation models and CDSE
+      are hidden by default behind a header switch.
+    - Catalogue composite is now discoverable via a checkbox under the
+      date range, with a max-images cap.
+    - Accuracy: validation-vector vs random-points modes; interactive
+      point-by-point labelling pad with class-name persistence;
+      metrics shown inline (OA as a percentage) and exported to Excel.
+    - Faster, lighter dropdowns on lower-spec / HiDPI machines.
+    - Fixes: AOI-rectangle persistence, percentage formatting in PDF
+      and Excel reports, plus packaging cleanups.
     1.0.0 (2026-05)
     First public release.
     - STAC catalogue search (Planetary Computer / Earth Search / CDSE) with

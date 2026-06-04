@@ -4,6 +4,37 @@ All notable changes to Terranova are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] — 2026-06
+
+### Added
+
+- Beta-features toggle in the header. Time-series, SAM, foundation
+  models, and CDSE sign-in are hidden by default; tick "Beta features"
+  to reveal them.
+- Catalogue composite is now discoverable: a "Create composite from
+  this search" checkbox under the date range, with a max-images cap so
+  you can bound data usage.
+- Accuracy panel split into two modes — "Use a validation vector" and
+  "Generate & label random points". The points mode includes an
+  interactive labelling pad (canvas pans + zooms to each point,
+  editable class names) and computes the confusion matrix straight
+  from the labelled points; metrics show inline (OA as a percentage)
+  and export to PDF + Excel.
+
+### Changed
+
+- Dropdowns across Classify / Accuracy / Catalogue use a lightweight
+  custom component instead of native `<select>` — fixes the
+  slow-expanding white popup and improves responsiveness on lower-spec
+  and HiDPI machines.
+
+### Fixed
+
+- AOI rectangle now persists on the embedded map after you draw it.
+- Overall accuracy and per-class user's / producer's accuracy render
+  as percentages in the PDF and Excel reports.
+- Plugin package no longer bundles `node_modules` or TypeScript source.
+
 ## [1.0.0] — 2026-05
 
 First public release.
@@ -53,4 +84,5 @@ First public release.
 - **Documentation.** MkDocs site under `docs/`, landing page under
   `web/`, both published to GitHub Pages on every push to `main`.
 
+[1.0.1]: https://github.com/TerranovaEO/terranova/releases/tag/v1.0.1
 [1.0.0]: https://github.com/TerranovaEO/terranova/releases/tag/v1.0.0

@@ -1,5 +1,9 @@
 # qgis-plugin-ci configuration — used by the release workflow to package
-# and (eventually) push to plugins.qgis.org.
+# the plugin and push new versions to plugins.qgis.org.
+#
+# Note: metadata.txt is the repo-root source of truth.  The release
+# workflow copies it into src/terranova/metadata.txt (where qgis-plugin-ci
+# expects it, inside plugin_path) just before packaging.
 
 plugin_path: src/terranova
 github_organization_slug: TerranovaEO
@@ -11,10 +15,3 @@ transifex_coordinator: ""
 transifex_organization: ""
 transifex_project: ""
 transifex_resource: ""
-
-# Files to include in the released .zip on top of the plugin_path.
-zip_extra_files:
-  - metadata.txt
-
-# Plugin repo for self-hosted builds (Phase 4).
-plugin_repo_url: ""
