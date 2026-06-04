@@ -28,3 +28,24 @@
 # Linguist hints — don't let GitHub call this a JS project because of ui_web/.
 src/terranova/ui_web/dist/** linguist-generated=true
 src/terranova/i18n/*.qm linguist-generated=true
+
+# export-ignore: keep dev/build tooling OUT of the packaged plugin.
+# `git archive` (used by qgis-plugin-ci to build the upload zip) honours
+# these, so the shipped plugin contains only the runtime files —
+# ui_web/dist plus the Python code — not the TypeScript source, the
+# Vite/ESLint/TS configs, or the serve helper scripts.  Also clears the
+# plugins.qgis.org "suspicious files" warning (serve.bat / serve.ps1 /
+# .eslintrc.json were being flagged).
+src/terranova/ui_web/src export-ignore
+src/terranova/ui_web/serve.bat export-ignore
+src/terranova/ui_web/serve.ps1 export-ignore
+src/terranova/ui_web/.eslintrc.json export-ignore
+src/terranova/ui_web/package.json export-ignore
+src/terranova/ui_web/package-lock.json export-ignore
+src/terranova/ui_web/tsconfig.json export-ignore
+src/terranova/ui_web/vite.config.ts export-ignore
+src/terranova/ui_web/tailwind.config.ts export-ignore
+src/terranova/ui_web/postcss.config.js export-ignore
+src/terranova/ui_web/vite-env.d.ts export-ignore
+src/terranova/ui_web/index.html export-ignore
+src/terranova/ui_web/README.md export-ignore

@@ -122,9 +122,11 @@ def _cmd_index(args: argparse.Namespace) -> int:
     import numpy as np
     import rasterio
 
-    from ..core.timeseries import indices as I
+    from ..core.timeseries import indices as idx
 
-    fn = {"ndwi": I.ndwi, "ndmi": I.ndmi, "nbr": I.nbr, "ndsi": I.ndsi}[args.kind]
+    fn = {"ndwi": idx.ndwi, "ndmi": idx.ndmi, "nbr": idx.nbr, "ndsi": idx.ndsi}[
+        args.kind
+    ]
 
     with rasterio.open(args.input) as src:
         profile = src.profile.copy()

@@ -23,8 +23,8 @@ class Sensor(str, Enum):
 
 @dataclass(frozen=True, slots=True)
 class BandInfo:
-    name: str           # canonical role: red, green, nir, swir1, ...
-    asset_id: str       # name in STAC asset / GeoTIFF — e.g. B04 for S2
+    name: str  # canonical role: red, green, nir, swir1, ...
+    asset_id: str  # name in STAC asset / GeoTIFF — e.g. B04 for S2
     wavelength_nm: float
     resolution_m: float
 
@@ -32,37 +32,37 @@ class BandInfo:
 # Sentinel-2 L2A surface reflectance bands.
 SENTINEL_2_BANDS: dict[str, BandInfo] = {
     "coastal": BandInfo("coastal", "B01", 443, 60),
-    "blue":    BandInfo("blue", "B02", 490, 10),
-    "green":   BandInfo("green", "B03", 560, 10),
-    "red":     BandInfo("red", "B04", 665, 10),
+    "blue": BandInfo("blue", "B02", 490, 10),
+    "green": BandInfo("green", "B03", 560, 10),
+    "red": BandInfo("red", "B04", 665, 10),
     "rededge1": BandInfo("rededge1", "B05", 705, 20),
     "rededge2": BandInfo("rededge2", "B06", 740, 20),
     "rededge3": BandInfo("rededge3", "B07", 783, 20),
-    "nir":      BandInfo("nir", "B08", 842, 10),
+    "nir": BandInfo("nir", "B08", 842, 10),
     "nir_narrow": BandInfo("nir_narrow", "B8A", 865, 20),
     "water_vapour": BandInfo("water_vapour", "B09", 940, 60),
     "swir_cirrus": BandInfo("swir_cirrus", "B10", 1375, 60),
-    "swir1":  BandInfo("swir1", "B11", 1610, 20),
-    "swir2":  BandInfo("swir2", "B12", 2190, 20),
+    "swir1": BandInfo("swir1", "B11", 1610, 20),
+    "swir2": BandInfo("swir2", "B12", 2190, 20),
 }
 
 # Landsat 8/9 OLI surface-reflectance bands.
 LANDSAT_8_9_BANDS: dict[str, BandInfo] = {
-    "coastal":  BandInfo("coastal", "SR_B1", 443, 30),
-    "blue":     BandInfo("blue", "SR_B2", 482, 30),
-    "green":    BandInfo("green", "SR_B3", 561, 30),
-    "red":      BandInfo("red", "SR_B4", 655, 30),
-    "nir":      BandInfo("nir", "SR_B5", 865, 30),
-    "swir1":    BandInfo("swir1", "SR_B6", 1609, 30),
-    "swir2":    BandInfo("swir2", "SR_B7", 2201, 30),
+    "coastal": BandInfo("coastal", "SR_B1", 443, 30),
+    "blue": BandInfo("blue", "SR_B2", 482, 30),
+    "green": BandInfo("green", "SR_B3", 561, 30),
+    "red": BandInfo("red", "SR_B4", 655, 30),
+    "nir": BandInfo("nir", "SR_B5", 865, 30),
+    "swir1": BandInfo("swir1", "SR_B6", 1609, 30),
+    "swir2": BandInfo("swir2", "SR_B7", 2201, 30),
 }
 
 # Landsat 4-7 TM/ETM+ surface-reflectance bands.
 LANDSAT_4_7_BANDS: dict[str, BandInfo] = {
-    "blue":  BandInfo("blue", "SR_B1", 485, 30),
+    "blue": BandInfo("blue", "SR_B1", 485, 30),
     "green": BandInfo("green", "SR_B2", 560, 30),
-    "red":   BandInfo("red", "SR_B3", 660, 30),
-    "nir":   BandInfo("nir", "SR_B4", 830, 30),
+    "red": BandInfo("red", "SR_B3", 660, 30),
+    "nir": BandInfo("nir", "SR_B4", 830, 30),
     "swir1": BandInfo("swir1", "SR_B5", 1650, 30),
     "swir2": BandInfo("swir2", "SR_B7", 2215, 30),
 }

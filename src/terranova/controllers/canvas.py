@@ -147,7 +147,6 @@ def preview_footprint(payload: dict[str, Any]) -> dict[str, Any]:
     we never accumulate stale preview layers in the project tree.
     """
     from qgis.core import (
-        QgsCoordinateReferenceSystem,
         QgsFeature,
         QgsGeometry,
         QgsProject,
@@ -509,5 +508,3 @@ def _style_outline(
     except Exception:  # noqa: BLE001 — older QGIS APIs
         pass
     layer.triggerRepaint()
-
-

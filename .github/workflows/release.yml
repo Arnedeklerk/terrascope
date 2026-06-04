@@ -1,9 +1,19 @@
 name: Release
 
 on:
+  # Automatic: pushing a vX.Y.Z tag.
   push:
     tags:
       - "v*.*.*"
+  # Manual: Actions tab → Release → "Run workflow".  Releases whatever
+  # version is currently in src/terranova/metadata.txt (override with the
+  # optional input).  The version MUST already be committed.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, e.g. 1.0.3 (blank = use metadata.txt). Must already be committed."
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -15,8 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # qgis-plugin-ci reads git history + tags; a shallow clone breaks it.
-          fetch-depth: 0
+          fetch-depth: 0 # qgis-plugin-ci needs full history + tags
 
       - uses: actions/setup-python@v5
         with:
@@ -25,26 +34,39 @@ jobs:
         with:
           node-version: "20"
 
-      # Rebuild the web bundle and fail loudly if it differs from what's
-      # committed — the committed src/terranova/ui_web/dist is what ends up
-      # in the published plugin (qgis-plugin-ci archives tracked files), so
-      # a stale commit would ship a stale UI.
+      # Work out the version + tag for both trigger types.  On a tag push
+      # the tag is authoritative.  On manual dispatch we take the input, or
+      # fall back to metadata.txt, and require it to match metadata.txt so
+      # we never publish a version that isn't actually committed.
+      - name: Resolve version and tag
+        id: ver
+        run: |
+          META=$(grep '^version=' src/terranova/metadata.txt | cut -d= -f2 | tr -d '[:space:]')
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+            VERSION="${VERSION#v}"
+            [ -z "$VERSION" ] && VERSION="$META"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          if [ "$VERSION" != "$META" ]; then
+            echo "::error::Requested version $VERSION but src/terranova/metadata.txt is $META. Bump + commit (scripts/sync_version.py --bump $VERSION) before releasing."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION"    >> "$GITHUB_OUTPUT"
+          echo "Releasing v$VERSION"
+
       - name: Build web tier
         working-directory: src/terranova/ui_web
         run: |
           npm ci || npm install
           npm run build
 
-      # Warn (don't fail) if the committed bundle differs from a fresh
-      # build.  A real diff usually means "UI source changed but dist
-      # wasn't rebuilt + committed".  It's only a warning because Vite
-      # output can differ trivially across OS / node patch versions, and
-      # we don't want that to block a legitimate release.  The committed
-      # dist is what actually ships (qgis-plugin-ci archives the tag).
       - name: Warn if committed web bundle looks stale
         run: |
           if ! git diff --quiet -- src/terranova/ui_web/dist; then
-            echo "::warning::src/terranova/ui_web/dist differs from a fresh build — if you changed UI source, rebuild + commit dist before tagging."
+            echo "::warning::src/terranova/ui_web/dist differs from a fresh build — if you changed UI source, rebuild + commit dist before releasing."
             git --no-pager diff --stat -- src/terranova/ui_web/dist
           else
             echo "Committed web bundle matches a fresh build."
@@ -56,20 +78,25 @@ jobs:
       - name: Package
         run: make package
 
+      # On manual dispatch there's no tag yet.  Create a LOCAL lightweight
+      # tag at the current commit so qgis-plugin-ci's `git archive` (below)
+      # has a ref to package.  The REMOTE tag is created by the GitHub
+      # Release step.  (On a tag push this is a harmless no-op — the tag
+      # already exists.)
+      - name: Ensure local tag exists
+        run: git tag "${{ steps.ver.outputs.tag }}" 2>/dev/null || true
+
       - name: GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.ver.outputs.tag }}
           files: dist/terranova-*.zip
           generate_release_notes: true
 
-      # Publish the new version to plugins.qgis.org with the per-plugin API
-      # token (preferred over OSGeo username/password — scoped + revocable).
-      # Skips cleanly (does NOT fail the run) when the token secret is unset,
-      # so tagging still cuts a GitHub release before credentials exist.
-      #
-      # The very first version of a brand-new plugin must be created once via
-      # the web form (https://plugins.qgis.org/plugins/add/) and approved by a
-      # moderator.  After the plugin record exists, every tag auto-publishes.
+      # Publish the version to plugins.qgis.org with the per-plugin API
+      # token.  Skips cleanly (does NOT fail) when the token isn't set.
+      # Adding a version requires the plugin record to already exist on
+      # plugins.qgis.org (created via the web form once + first approval).
       - name: Publish to plugins.qgis.org
         env:
           QGIS_TOKEN: ${{ secrets.QGIS_TOKEN }}
@@ -79,12 +106,11 @@ jobs:
             exit 0
           fi
           python -m pip install --upgrade qgis-plugin-ci
-          # -c / --allow-uncommitted-changes: the earlier build + package
-          # steps leave the working tree dirty (regenerated dist, npm
-          # touching package-lock).  This flag makes qgis-plugin-ci stash
-          # that and archive the committed tag instead — which already
-          # contains the correct dist bundle + metadata.txt.
-          qgis-plugin-ci release "${GITHUB_REF_NAME#v}" \
-            --release-tag "$GITHUB_REF_NAME" \
+          # -c/--allow-uncommitted-changes: the build + package steps dirty
+          # the tree (regenerated dist, npm touching package-lock).  This
+          # stashes that and archives the committed tag, which already
+          # carries the correct dist bundle, metadata.txt and LICENSE.
+          qgis-plugin-ci release "${{ steps.ver.outputs.version }}" \
+            --release-tag "${{ steps.ver.outputs.tag }}" \
             --allow-uncommitted-changes \
             --qgis-token "$QGIS_TOKEN"

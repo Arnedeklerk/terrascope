@@ -86,7 +86,6 @@ def write_excel_report(
 
     ws.cell(row=row, column=1, value="Confusion matrix").font = Font(bold=True, size=12)
     row += 1
-    cm_header_row = row
     ws.cell(row=row, column=1, value="predicted ↓ / truth →").font = bold
     for j, cls in enumerate(classes):
         c = ws.cell(row=row, column=2 + j, value=int(cls))
