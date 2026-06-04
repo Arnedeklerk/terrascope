@@ -4,8 +4,8 @@ qgisMinimumVersion=3.40
 qgisMaximumVersion=4.99
 description=Earth-observation toolkit for QGIS: STAC search, classical + deep-learning classification, time-series change detection.
 about=Terranova is an open-source QGIS plugin for modern Earth observation: STAC catalogue search and Cloud-Optimised-GeoTIFF download from Planetary Computer / Earth Search / Copernicus Data Space, an embedded interactive map for picking areas of interest and inspecting scene footprints, classical and deep-learning classification, accuracy assessment with PDF and Excel reports, and per-pixel time-series change detection. It offers native Qt dialogs plus a modern React dock panel via QtWebEngine.
-    External dependencies (NOT bundled with QGIS): the plugin needs pydantic (loaded as soon as the dock opens), plus pystac-client, odc-stac, rasterio, rioxarray, scikit-learn and reportlab for the core features; the LightGBM and XGBoost classifiers additionally need lightgbm and xgboost; Excel export needs openpyxl; the optional Beta deep-learning features (Prithvi / Clay fine-tuning, SAM segmentation) further require torch, terratorch and segment-geospatial. Install them into the QGIS Python environment — on Windows use the OSGeo4W Shell, e.g. "pip install pydantic pystac-client odc-stac rasterio rioxarray scikit-learn reportlab openpyxl". If you ever see an ImportError mentioning pydantic_core, reinstall the pair with "pip install --upgrade --force-reinstall pydantic". Full per-platform instructions are in the repository README. Licensed under GPL-3.0-or-later.
-version=1.0.2
+    External dependencies (NOT bundled with QGIS): the plugin needs pydantic (loaded as soon as the dock opens), plus pystac-client, odc-stac, rasterio, rioxarray, scikit-learn and reportlab for the core features; the LightGBM and XGBoost classifiers additionally need lightgbm and xgboost; Excel export needs openpyxl; the optional Beta deep-learning features (Prithvi / Clay fine-tuning, SAM segmentation) further require torch, terratorch and segment-geospatial. Install them into the QGIS Python environment — on Windows use the OSGeo4W Shell, e.g. "pip install pydantic pystac-client odc-stac rasterio rioxarray scikit-learn reportlab openpyxl". On the QGIS 3.x (LTR) series, Terranova adds an "Install / repair dependencies…" entry under Raster -> Terranova that does this for you with one click (and fixes the common pydantic_core version-skew ImportError); on QGIS 4.x the dependencies install cleanly and no installer is shown. If you ever need to fix it by hand, reinstall the pair with "pip install --upgrade --force-reinstall pydantic". Full per-platform instructions are in the repository README. Licensed under GPL-3.0-or-later.
+version=1.0.3
 author=Cole Battell, Arne de Klerk
 email=colebattell@gmail.com
 homepage=https://github.com/TerranovaEO/terranova
@@ -20,6 +20,15 @@ category=Raster
 license=GPL-3.0-or-later
 plugin_dependencies=
 changelog=
+    1.0.3 (2026-06)
+    - One-click dependency setup on QGIS 3.x: if a required Python
+      package is missing or broken when the dock opens (most often the
+      pydantic / pydantic_core version skew on the 3.40 LTR series),
+      Terranova now shows a friendly "Install / repair dependencies"
+      dialog instead of a raw traceback, and can pip-install compatible
+      versions into the QGIS Python for you. Also reachable any time via
+      Raster -> Terranova. QGIS 4.x is left untouched — its bundled
+      Python installs the dependencies cleanly, so no installer appears.
     1.0.2 (2026-06)
     - QGIS 3.x (PyQt5) compatibility: the dock and native dialogs no
       longer assume PyQt6-only enum syntax, so the plugin loads on the
