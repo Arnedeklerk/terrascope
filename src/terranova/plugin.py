@@ -48,6 +48,16 @@ class TerranovaPlugin:
     # ------------------------------------------------------------------ #
     def initGui(self) -> None:
         """Called by QGIS when the plugin is enabled."""
+        from .ui import deps
+
+        # QGIS 3.x: dependencies installed via our no-admin installer land
+        # in the per-user site-packages, which the QGIS interpreter often
+        # doesn't put on sys.path.  Add it early so those packages import
+        # on the next launch (otherwise the dock keeps re-prompting to
+        # install even though everything is already there).
+        if deps.is_qgis_3():
+            deps.ensure_user_site_on_path()
+
         icon = self._icon()
 
         # Main toolbar button — toggles the dock.
@@ -105,8 +115,6 @@ class TerranovaPlugin:
         # plugin's Python dependencies (notably the pydantic_core skew that
         # breaks the dock on the 3.40 series).  4.x is left clean — its
         # bundled Python installs the deps without fuss.
-        from .ui import deps
-
         if deps.is_qgis_3():
             self.action_deps = QAction(
                 icon, "Install / repair dependencies…", self.iface.mainWindow()
@@ -163,6 +171,13 @@ class TerranovaPlugin:
             # the user actually opens the dock.  If any of that is missing
             # or broken we must not surface a raw traceback: hand off to the
             # dependency helper instead.
+            from .ui import deps
+
+            # Pick up any deps just installed into the user site (3.x) so a
+            # reopen works without even restarting QGIS.
+            if deps.is_qgis_3():
+                deps.ensure_user_site_on_path()
+
             try:
                 from .ui.plugin_dock import TerranovaDock
             except Exception as exc:  # noqa: BLE001 — import-time dep failure

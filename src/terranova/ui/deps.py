@@ -22,6 +22,7 @@ from __future__ import annotations
 import importlib
 import importlib.util
 import os
+import site
 import sys
 import sysconfig
 from dataclasses import dataclass
@@ -79,6 +80,37 @@ def is_qgis_3() -> bool:
         return int(Qgis.QGIS_VERSION_INT) < 40000
     except Exception:  # noqa: BLE001 — never let detection itself raise
         return False
+
+
+def ensure_user_site_on_path() -> bool:
+    """Make ``pip --user`` installs importable by putting the user site on path.
+
+    Our no-admin installer writes into the per-user site-packages (e.g.
+    ``%APPDATA%\\Python\\Python312\\site-packages``).  QGIS-for-Windows
+    frequently starts its interpreter with the user site *disabled*, so
+    those packages aren't on ``sys.path`` even after a restart and the
+    plugin keeps thinking its dependencies are missing.  Adding the
+    directory ourselves (idempotently) fixes that.  Returns ``True`` if a
+    directory was newly added.
+    """
+    try:
+        user_site = site.getusersitepackages()
+    except Exception:  # noqa: BLE001 — best-effort
+        return False
+    if not user_site or not os.path.isdir(user_site):
+        return False
+    if user_site in sys.path:
+        return False  # already handled at startup, with correct precedence
+    site.addsitedir(user_site)  # append + process any .pth files
+    # Match normal `pip --user` precedence: a freshly-installed user-site
+    # package should win over a broken / older copy in the (often
+    # read-only) system site-packages, so move it to the front.
+    try:
+        sys.path.remove(user_site)
+    except ValueError:
+        pass
+    sys.path.insert(0, user_site)
+    return True
 
 
 def _probe(import_name: str) -> None:
