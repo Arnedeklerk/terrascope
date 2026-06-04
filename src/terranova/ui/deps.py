@@ -159,8 +159,55 @@ def python_executable() -> str:
     return exe or "python"
 
 
-def _pip_args(specs: list[str], *, force: bool) -> list[str]:
-    args = [python_executable(), "-m", "pip", "install", "--upgrade", "--no-input"]
+def user_site_needed() -> bool:
+    """True when the active site-packages isn't writable.
+
+    A standalone QGIS lives under ``C:\\Program Files`` and its
+    ``site-packages`` needs admin rights — so a plain ``pip install``
+    dies with ``WinError 5: Access is denied``.  When that's the case we
+    install with ``--user`` (into ``%APPDATA%\\Python\\...``), which QGIS's
+    interpreter still imports from and which needs no elevation.
+    """
+    target = sysconfig.get_paths().get("purelib")
+    if not target or not os.path.isdir(target):
+        return False  # can't tell — let pip try, the dialog retries with --user
+    probe = os.path.join(target, ".terranova-write-test")
+    try:
+        with open(probe, "w"):
+            pass
+        os.remove(probe)
+        return False
+    except OSError:
+        return True
+
+
+def _installed_version(dist_name: str) -> str | None:
+    try:
+        from importlib.metadata import version
+
+        return version(dist_name)
+    except Exception:  # noqa: BLE001 — best-effort, any failure -> no pin
+        return None
+
+
+def _numpy_pin() -> str | None:
+    """Pin numpy to the version QGIS already ships, if any.
+
+    QGIS's compiled extensions (GDAL bindings, ``qgis._core``) are built
+    against a specific numpy ABI.  Installing the EO stack can otherwise
+    drag in a numpy *major* bump (1.x -> 2.x) that silently breaks QGIS.
+    Pinning numpy to the running version forces pip to resolve
+    compatible versions of rasterio / scikit-learn / xarray around it,
+    leaving QGIS's numpy untouched.
+    """
+    ver = _installed_version("numpy")
+    return f"numpy=={ver}" if ver else None
+
+
+def _pip_args(specs: list[str], *, force: bool, user: bool) -> list[str]:
+    args = [python_executable(), "-m", "pip", "install", "--no-input"]
+    if user:
+        args.append("--user")
     if force:
         # --force-reinstall + --no-cache-dir drags pydantic_core back into
         # lockstep with pydantic, fixing the validate_core_schema skew.
@@ -168,33 +215,70 @@ def _pip_args(specs: list[str], *, force: bool) -> list[str]:
     return args + specs
 
 
-def plan(broken: list[DepStatus]) -> list[list[str]]:
+def with_user(cmd: list[str]) -> list[str]:
+    """Return *cmd* with ``--user`` inserted after ``install`` (idempotent)."""
+    if "--user" in cmd:
+        return list(cmd)
+    out = list(cmd)
+    try:
+        out.insert(out.index("install") + 1, "--user")
+    except ValueError:
+        out.append("--user")
+    return out
+
+
+# Markers in pip output that mean "couldn't write to site-packages" — the
+# cue to transparently retry the same command with --user.
+_PERMISSION_MARKERS = (
+    "access is denied",
+    "permission denied",
+    "winerror 5",
+    "errno 13",
+    "consider using the `--user`",
+    "could not install packages due to an oserror",
+)
+
+
+def looks_like_permission_error(output: str) -> bool:
+    low = output.lower()
+    return any(marker in low for marker in _PERMISSION_MARKERS)
+
+
+def plan(broken: list[DepStatus], *, user: bool | None = None) -> list[list[str]]:
     """Sequence of pip invocations that repairs *broken*.
 
     pydantic gets its own forced reinstall first (so its matching
-    pydantic_core comes along); everything else is a plain upgrade in one
-    shot to avoid needlessly re-downloading big binary wheels.
+    pydantic_core comes along); the rest install in one shot.  numpy is
+    pinned to the running version so QGIS's scientific stack isn't
+    disturbed.  ``user`` forces / disables ``--user``; left as ``None`` it
+    is decided by :func:`user_site_needed`.
     """
+    use_user = user_site_needed() if user is None else user
     names = {s.import_name for s in broken}
     cmds: list[list[str]] = []
     if "pydantic" in names:
-        cmds.append(_pip_args([CORE_REQUIREMENTS["pydantic"]], force=True))
+        cmds.append(_pip_args([CORE_REQUIREMENTS["pydantic"]], force=True, user=use_user))
     rest = [s.requirement for s in broken if s.import_name != "pydantic"]
     if rest:
-        cmds.append(_pip_args(rest, force=False))
+        pin = _numpy_pin()
+        specs = ([pin] if pin else []) + rest
+        cmds.append(_pip_args(specs, force=False, user=use_user))
     return cmds
 
 
 def manual_command(broken: list[DepStatus]) -> str:
     """A copy-pasteable equivalent of :func:`plan`, for the message box / log."""
+    user = " --user" if user_site_needed() else ""
     lines = []
     names = {s.import_name for s in broken}
     if "pydantic" in names:
-        lines.append('pip install --upgrade --force-reinstall "pydantic>=2.7,<3"')
+        lines.append(f'pip install{user} --force-reinstall "pydantic>=2.7,<3"')
     rest = [s.requirement for s in broken if s.import_name != "pydantic"]
     if rest:
-        lines.append("pip install --upgrade " + " ".join(f'"{r}"' for r in rest))
-    return "\n".join(lines) if lines else "pip install --upgrade --force-reinstall pydantic"
+        pin = _numpy_pin()
+        specs = ([f'"{pin}"'] if pin else []) + [f'"{r}"' for r in rest]
+        lines.append(f"pip install{user} " + " ".join(specs))
+    return "\n".join(lines) if lines else f"pip install{user} --force-reinstall pydantic"
 
 
 # --------------------------------------------------------------------- #
@@ -215,6 +299,8 @@ class DependencyInstallerDialog(QDialog):
         self._commands = plan(broken)
         self._queue: list[list[str]] = []
         self._proc: QProcess | None = None
+        self._current_cmd: list[str] = []
+        self._buf = ""  # output of the in-flight command, for error sniffing
         self._build_ui()
 
     # -- UI -------------------------------------------------------------- #
@@ -224,11 +310,13 @@ class DependencyInstallerDialog(QDialog):
         names = ", ".join(s.import_name for s in self._broken) or "—"
         intro = QLabel(
             "<b>Terranova needs a few Python packages</b><br><br>"
-            "These aren't bundled with QGIS and look missing or out of date in "
+            "These aren't bundled with QGIS and look missing or broken in "
             "this QGIS Python environment:<br><br>"
             f"<tt>{names}</tt><br><br>"
-            "Click <b>Install / repair</b> to fetch compatible versions with pip. "
-            "When it finishes, <b>restart QGIS</b> and reopen Terranova."
+            "Click <b>Install / repair</b> to fetch compatible versions with pip "
+            "(numpy is pinned to the version QGIS already uses, so its own tools "
+            "keep working; no admin rights needed). When it finishes, "
+            "<b>restart QGIS</b> and reopen Terranova."
         )
         intro.setWordWrap(True)
         layout.addWidget(intro)
@@ -276,6 +364,8 @@ class DependencyInstallerDialog(QDialog):
             self._btn_close.setText("Close")
             return
         cmd = self._queue.pop(0)
+        self._current_cmd = cmd
+        self._buf = ""
         self._append("\n$ " + " ".join(cmd) + "\n")
         proc = QProcess(self)
         proc.setProcessChannelMode(enum_member(QProcess, "ProcessChannelMode", "MergedChannels"))
@@ -289,14 +379,30 @@ class DependencyInstallerDialog(QDialog):
             return
         data = bytes(self._proc.readAll()).decode("utf-8", "replace")
         if data:
+            self._buf += data
             self._append(data)
 
     def _finished(self, code: int, _status: object = None) -> None:
-        if code != 0:
-            self._append(
-                f"\n✗ pip exited with code {code}. "
-                "You can copy the command above and run it in the OSGeo4W Shell.\n"
-            )
-            self._btn_install.setEnabled(True)
+        if code == 0:
+            self._run_next()
             return
-        self._run_next()
+
+        # Couldn't write to a protected site-packages (e.g. QGIS under
+        # Program Files)?  Transparently retry the same command with
+        # --user, which writes to the user profile and needs no admin.
+        if "--user" not in self._current_cmd and looks_like_permission_error(self._buf):
+            retry = with_user(self._current_cmd)
+            self._append(
+                "\n→ No write access to the QGIS site-packages. "
+                "Retrying with --user (installs into your user profile, no admin needed)…\n"
+            )
+            self._queue.insert(0, retry)
+            self._run_next()
+            return
+
+        self._append(
+            f"\n✗ pip exited with code {code}. "
+            "You can copy the command above and run it in the OSGeo4W Shell "
+            "(an Administrator shell will also work).\n"
+        )
+        self._btn_install.setEnabled(True)
