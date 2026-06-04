@@ -35,13 +35,19 @@ jobs:
           npm ci || npm install
           npm run build
 
-      - name: Fail if committed web bundle is stale
+      # Warn (don't fail) if the committed bundle differs from a fresh
+      # build.  A real diff usually means "UI source changed but dist
+      # wasn't rebuilt + committed".  It's only a warning because Vite
+      # output can differ trivially across OS / node patch versions, and
+      # we don't want that to block a legitimate release.  The committed
+      # dist is what actually ships (qgis-plugin-ci archives the tag).
+      - name: Warn if committed web bundle looks stale
         run: |
           if ! git diff --quiet -- src/terranova/ui_web/dist; then
-            echo "::error::src/terranova/ui_web/dist differs from a fresh build."
-            echo "Run 'npm run build' in src/terranova/ui_web, commit the result, and re-tag."
+            echo "::warning::src/terranova/ui_web/dist differs from a fresh build — if you changed UI source, rebuild + commit dist before tagging."
             git --no-pager diff --stat -- src/terranova/ui_web/dist
-            exit 1
+          else
+            echo "Committed web bundle matches a fresh build."
           fi
 
       - name: Verify version sync
